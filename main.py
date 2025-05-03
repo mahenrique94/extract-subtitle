@@ -19,10 +19,6 @@ args = parser.parse_args()
 if args.file is None:
   raise Exception("You need to provide a file to extract the subtitles")
 
-
-if not args.file.endswith(".mp3"):
-  raise Exception("You need to provide a .mp3 file")
-
 print("Loading whisper model...")
 model = whisper.load_model("large")
 
