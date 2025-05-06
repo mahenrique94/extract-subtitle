@@ -260,4 +260,19 @@ msgid "Powered by advanced AI for precise subtitle generation."
 msgstr "Alimentado por IA avançada para geração precisa de legendas."
 
 msgid "Get Started"
-msgstr "Começar Agora" 
+msgstr "Começar Agora"
+
+msgid "Upload your video file to extract subtitles"
+msgstr "Envie seu arquivo de vídeo para extrair legendas"
+
+msgid "Upload a file"
+msgstr "Enviar arquivo"
+
+msgid "or drag and drop"
+msgstr "ou arraste e solte"
+
+msgid "MP4, AVI, MKV, MOV up to 100MB"
+msgstr "MP4, AVI, MKV, MOV até 100MB"
+
+msgid "Your recent subtitle extractions"
+msgstr "Suas extrações de legendas recentes" 
