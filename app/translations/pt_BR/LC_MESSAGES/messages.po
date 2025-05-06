@@ -1,0 +1,263 @@
+# Portuguese (Brazil) translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"POT-Creation-Date: 2024-03-19 12:00+0000\n"
+"PO-Revision-Date: 2024-03-19 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "This field is required"
+msgstr "Este campo é obrigatório"
+
+msgid "Please select a target language"
+msgstr "Por favor, selecione um idioma de destino"
+
+msgid "Media File"
+msgstr "Arquivo de Mídia"
+
+msgid "Only video files are allowed!"
+msgstr "Apenas arquivos de vídeo são permitidos!"
+
+msgid "Target Language"
+msgstr "Idioma de Destino"
+
+msgid "Extract Subtitles"
+msgstr "Extrair Legendas"
+
+msgid "Dashboard"
+msgstr "Painel"
+
+msgid "Upload Media"
+msgstr "Enviar Mídia"
+
+msgid "Recent Extractions"
+msgstr "Extrações Recentes"
+
+msgid "No extractions yet"
+msgstr "Nenhuma extração ainda"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Progress"
+msgstr "Progresso"
+
+msgid "Created"
+msgstr "Criado"
+
+msgid "Actions"
+msgstr "Ações"
+
+msgid "Download"
+msgstr "Baixar"
+
+msgid "Delete"
+msgstr "Excluir"
+
+msgid "Sign In"
+msgstr "Entrar"
+
+msgid "Register"
+msgstr "Registrar"
+
+msgid "Username"
+msgstr "Nome de usuário"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Password"
+msgstr "Senha"
+
+msgid "Confirm Password"
+msgstr "Confirmar Senha"
+
+msgid "Remember Me"
+msgstr "Lembrar-me"
+
+msgid "Already have an account?"
+msgstr "Já tem uma conta?"
+
+msgid "New user?"
+msgstr "Novo usuário?"
+
+msgid "Invalid email or password"
+msgstr "E-mail ou senha inválidos"
+
+msgid "Congratulations, you are now registered!"
+msgstr "Parabéns, você agora está registrado!"
+
+msgid "Logout"
+msgstr "Sair"
+
+msgid "Sign up"
+msgstr "Cadastrar"
+
+msgid "Create Account"
+msgstr "Criar Conta"
+
+msgid "Confirm Password"
+msgstr "Confirmar Senha"
+
+msgid "Already have an account?"
+msgstr "Já tem uma conta?"
+
+msgid "Sign in"
+msgstr "Entrar"
+
+msgid "File"
+msgstr "Arquivo"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Progress"
+msgstr "Progresso"
+
+msgid "Failed"
+msgstr "Falhou"
+
+msgid "Download SRT"
+msgstr "Baixar SRT"
+
+msgid "SRT Preview"
+msgstr "Visualização do SRT"
+
+msgid "Preview"
+msgstr "Visualizar"
+
+msgid "Completed"
+msgstr "Concluído"
+
+msgid "Pending"
+msgstr "Pendente"
+
+msgid "Processing"
+msgstr "Processando"
+
+msgid "Processing failed"
+msgstr "Falha no processamento"
+
+msgid "Close"
+msgstr "Fechar"
+
+msgid "Uploading..."
+msgstr "Enviando..."
+
+msgid "Upload complete"
+msgstr "Upload concluído"
+
+msgid "Upload failed"
+msgstr "Falha no upload"
+
+msgid "Error loading SRT preview"
+msgstr "Erro ao carregar visualização do SRT"
+
+msgid "No extractions found. Upload a file to get started!"
+msgstr "Nenhuma extração encontrada. Envie um arquivo para começar!"
+
+msgid "Repeat Password"
+msgstr "Repetir Senha"
+
+msgid "Log in"
+msgstr "Entrar"
+
+msgid "First Name"
+msgstr "Nome"
+
+msgid "Last Name"
+msgstr "Sobrenome"
+
+msgid "AI-Powered Subtitle Generation"
+msgstr "Geração de Legendas com IA"
+
+msgid "Features"
+msgstr "Recursos"
+
+msgid "Everything you need for perfect subtitles"
+msgstr "Tudo que você precisa para legendas perfeitas"
+
+msgid "Ready to get started?"
+msgstr "Pronto para começar?"
+
+msgid "Create your account today."
+msgstr "Crie sua conta hoje."
+
+msgid "Your file is being processed. You will be notified when it's ready."
+msgstr "Seu arquivo está sendo processado. Você será notificado quando estiver pronto."
+
+msgid "An error occurred while processing your file."
+msgstr "Ocorreu um erro ao processar seu arquivo."
+
+msgid "Please log in to access this page."
+msgstr "Por favor, faça login para acessar esta página."
+
+msgid "pending"
+msgstr "Pendente"
+
+msgid "processing"
+msgstr "Processando"
+
+msgid "completed"
+msgstr "Concluído"
+
+msgid "failed"
+msgstr "Falhou"
+
+msgid "Transform your videos with accurate, AI-generated subtitles in multiple languages. Perfect for content creators, educators, and businesses."
+msgstr "Transforme seus vídeos com legendas precisas geradas por IA em vários idiomas. Perfeito para criadores de conteúdo, educadores e empresas."
+
+msgid "Multiple Languages"
+msgstr "Múltiplos Idiomas"
+
+msgid "Support for multiple languages and automatic language detection."
+msgstr "Suporte para vários idiomas e detecção automática de idioma."
+
+msgid "Fast Processing"
+msgstr "Processamento Rápido"
+
+msgid "Quick and efficient subtitle generation using advanced AI technology."
+msgstr "Geração rápida e eficiente de legendas usando tecnologia avançada de IA."
+
+msgid "SRT Format"
+msgstr "Formato SRT"
+
+msgid "Export subtitles in standard SRT format, compatible with all major video platforms."
+msgstr "Exporte legendas no formato SRT padrão, compatível com todas as principais plataformas de vídeo."
+
+msgid "Cloud Storage"
+msgstr "Armazenamento em Nuvem"
+
+msgid "Secure cloud storage for your subtitles with easy access and management."
+msgstr "Armazenamento seguro em nuvem para suas legendas com fácil acesso e gerenciamento."
+
+msgid "Welcome to Subtitle Extractor"
+msgstr "Bem-vindo ao Extrator de Legendas"
+
+msgid "Extract subtitles from your audio and video files with ease. Our powerful AI-powered tool helps you create accurate subtitles in multiple languages."
+msgstr "Extraia legendas de seus arquivos de áudio e vídeo com facilidade. Nossa poderosa ferramenta com IA ajuda você a criar legendas precisas em vários idiomas."
+
+msgid "Easy to Use"
+msgstr "Fácil de Usar"
+
+msgid "Simple interface for uploading and processing your media files."
+msgstr "Interface simples para enviar e processar seus arquivos de mídia."
+
+msgid "High Accuracy"
+msgstr "Alta Precisão"
+
+msgid "Powered by advanced AI for precise subtitle generation."
+msgstr "Alimentado por IA avançada para geração precisa de legendas."
+
+msgid "Get Started"
+msgstr "Começar Agora" 

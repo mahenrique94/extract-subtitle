@@ -1,0 +1,141 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"POT-Creation-Date: 2024-03-19 12:00+0000\n"
+"PO-Revision-Date: 2024-03-19 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Extract Subtitle"
+msgstr "Extract Subtitle"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "Failed to change language"
+msgstr "Failed to change language"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Welcome to Subtitle Extractor"
+msgstr "Welcome to Subtitle Extractor"
+
+msgid "Extract subtitles from your audio and video files with ease. Our powerful AI-powered tool helps you create accurate subtitles in multiple languages."
+msgstr "Extract subtitles from your audio and video files with ease. Our powerful AI-powered tool helps you create accurate subtitles in multiple languages."
+
+msgid "Go to Dashboard"
+msgstr "Go to Dashboard"
+
+msgid "Sign In"
+msgstr "Sign In"
+
+msgid "Get Started"
+msgstr "Get Started"
+
+msgid "Easy to Use"
+msgstr "Easy to Use"
+
+msgid "Simple interface for uploading and processing your media files."
+msgstr "Simple interface for uploading and processing your media files."
+
+msgid "Multiple Languages"
+msgstr "Multiple Languages"
+
+msgid "Support for various languages and translation options."
+msgstr "Support for various languages and translation options."
+
+msgid "High Accuracy"
+msgstr "High Accuracy"
+
+msgid "Powered by advanced AI for precise subtitle generation."
+msgstr "Powered by advanced AI for precise subtitle generation."
+
+msgid "Return to Home"
+msgstr "Return to Home"
+
+msgid "Upload Media"
+msgstr "Upload Media"
+
+msgid "Recent Extractions"
+msgstr "Recent Extractions"
+
+msgid "No extractions yet"
+msgstr "No extractions yet"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Progress"
+msgstr "Progress"
+
+msgid "Created"
+msgstr "Created"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Register"
+msgstr "Register"
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Remember Me"
+msgstr "Remember Me"
+
+msgid "Already have an account?"
+msgstr "Already have an account?"
+
+msgid "New user?"
+msgstr "New user?"
+
+msgid "Invalid email or password"
+msgstr "Invalid email or password"
+
+msgid "Congratulations, you are now registered!"
+msgstr "Congratulations, you are now registered!"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "AI-Powered Subtitle Generation"
+msgstr "AI-Powered Subtitle Generation"
+
+msgid "Features"
+msgstr "Features"
+
+msgid "Everything you need for perfect subtitles"
+msgstr "Everything you need for perfect subtitles"
+
+msgid "Ready to get started?"
+msgstr "Ready to get started?"
+
+msgid "Create your account today."
+msgstr "Create your account today." 

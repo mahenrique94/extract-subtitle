@@ -1,0 +1,12 @@
+1
+00:00:00,000 --> 00:00:03,259
+No, just this cable here, it's not working.
+
+2
+00:00:03,660 --> 00:00:09,500
+Then I took the iPhone cable, put it in the box and the USB-C, it's charging normally.
+
+3
+00:00:10,280 --> 00:00:13,320
+Now just this tip here, I think it's giving a problem.
+
