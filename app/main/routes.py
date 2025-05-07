@@ -9,6 +9,7 @@ from app import db
 import threading
 from app import create_app
 from flask_babel import _
+from app.config.languages import SUPPORTED_LANGUAGES
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,13 @@ def test():
 def dashboard():
     logger.debug('Accessing dashboard route')
     form = UploadForm()
+    
+    # Prepare language options for the template
+    language_options = [
+        {'value': code, 'label': _(info['display_name']), 'flag': info['flag']}
+        for code, info in SUPPORTED_LANGUAGES.items()
+    ]
+    
     if form.validate_on_submit():
         try:
             logger.info(f"Processing file upload: {form.file.data.filename}")
@@ -40,54 +48,82 @@ def dashboard():
             filename, file_path = extractor.save_file(form.file.data)
             logger.info(f"File saved successfully: {filename}")
             
+            # Ensure the language code is in the correct case
+            target_language = form.target_language.data
+            if target_language.lower() == 'pt_br':
+                target_language = 'pt_BR'
+            
             # Create extraction record
             extraction = SubtitleExtraction(
                 user_id=current_user.id,
                 original_filename=filename,
                 srt_filename='',  # Will be set after processing
-                target_language=form.language.data,
+                target_language=target_language,
                 status='pending'
             )
             db.session.add(extraction)
             db.session.commit()
-            logger.info(f"Created extraction record with ID: {extraction.id}")
+            extraction_id = extraction.id  # Capture the ID for the background task
+            logger.info(f"Created extraction record with ID: {extraction_id}")
             
             # Start processing in background
-            def process_in_background():
-                # Create a new application context for the background thread
-                app = create_app()
-                with app.app_context():
-                    try:
-                        logger.info(f"Starting background processing for extraction {extraction.id}")
-                        extractor.process_extraction(extraction.id)
-                        logger.info(f"Background processing completed for extraction {extraction.id}")
-                    except Exception as e:
-                        logger.error(f"Error in background processing: {str(e)}")
-                        extraction.status = 'failed'
-                        extraction.error_message = str(e)
+            def process_extraction():
+                try:
+                    with create_app().app_context():
+                        # Get the extraction record
+                        extraction = SubtitleExtraction.query.get(extraction_id)
+                        if not extraction:
+                            logger.error(f"Extraction record not found: {extraction_id}")
+                            return
+                        
+                        # Update status to processing
+                        extraction.status = 'processing'
                         db.session.commit()
+                        
+                        # Convert language code for Whisper (e.g., pt_BR -> pt)
+                        whisper_language = target_language.split('_')[0].lower()
+                        
+                        # Extract subtitles
+                        srt_filename = extractor.extract_subtitles(file_path, whisper_language, extraction_id)
+                        
+                        # Update extraction record
+                        extraction.srt_filename = srt_filename
+                        extraction.status = 'completed'
+                        db.session.commit()
+                        
+                        logger.info(f"Extraction completed successfully: {extraction_id}")
+                except Exception as e:
+                    logger.error(f"Error processing extraction {extraction_id}: {str(e)}")
+                    try:
+                        with create_app().app_context():
+                            extraction = SubtitleExtraction.query.get(extraction_id)
+                            if extraction:
+                                extraction.status = 'failed'
+                                extraction.error_message = str(e)
+                                db.session.commit()
+                    except Exception as inner_e:
+                        logger.error(f"Error updating failed status: {str(inner_e)}")
             
-            thread = threading.Thread(target=process_in_background)
-            thread.daemon = True  # Make thread daemon so it exits when main thread exits
+            # Start background processing
+            thread = threading.Thread(target=process_extraction)
             thread.start()
-            logger.info(f"Background thread started for extraction {extraction.id}")
             
-            flash(_('Your file is being processed. You will be notified when it\'s ready.'))
+            flash(_('Your file is being processed. You will be notified when it\'s ready.'), 'info')
             return redirect(url_for('main.dashboard'))
             
         except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
-            flash(_('An error occurred while processing your file.'))
+            logger.error(f"Error processing upload: {str(e)}")
+            flash(_('An error occurred while processing your file.'), 'error')
             return redirect(url_for('main.dashboard'))
     
     # Get user's extractions
     extractions = SubtitleExtraction.query.filter_by(user_id=current_user.id).order_by(SubtitleExtraction.created_at.desc()).all()
-    logger.debug(f"Found {len(extractions)} extractions for user {current_user.id}")
     
     return render_template('main/dashboard.html', 
-                         title='Dashboard',
+                         title=_('Dashboard'),
                          form=form,
-                         extractions=extractions)
+                         extractions=extractions,
+                         language_options=language_options)
 
 @main.route('/download/<filename>')
 @login_required
@@ -142,8 +178,8 @@ def set_language():
         data = request.get_json()
         if data and 'language' in data:
             language = data['language']
-            # Convert pt-BR to pt_BR format
-            if language == 'pt-BR':
+            # Convert pt-BR to pt_BR format but preserve case
+            if language.lower() == 'pt-br':
                 language = 'pt_BR'
             session['language'] = language
             logger.debug(f"Language set to: {language}")

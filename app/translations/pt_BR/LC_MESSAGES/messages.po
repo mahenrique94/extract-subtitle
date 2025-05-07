@@ -16,6 +16,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+msgid "English"
+msgstr "Inglês"
+
+msgid "Português (Brasil)"
+msgstr "Português (Brasil)"
+
+msgid "Español"
+msgstr "Espanhol"
+
 msgid "This field is required"
 msgstr "Este campo é obrigatório"
 
@@ -106,12 +115,6 @@ msgstr "Cadastrar"
 msgid "Create Account"
 msgstr "Criar Conta"
 
-msgid "Confirm Password"
-msgstr "Confirmar Senha"
-
-msgid "Already have an account?"
-msgstr "Já tem uma conta?"
-
 msgid "Sign in"
 msgstr "Entrar"
 
@@ -120,9 +123,6 @@ msgstr "Arquivo"
 
 msgid "Language"
 msgstr "Idioma"
-
-msgid "Progress"
-msgstr "Progresso"
 
 msgid "Failed"
 msgstr "Falhou"
@@ -275,4 +275,13 @@ msgid "MP4, AVI, MKV, MOV up to 100MB"
 msgstr "MP4, AVI, MKV, MOV até 100MB"
 
 msgid "Your recent subtitle extractions"
-msgstr "Suas extrações de legendas recentes" 
+msgstr "Suas extrações de legendas recentes"
+
+msgid "Select target language"
+msgstr "Selecione o idioma de destino"
+
+msgid "Select Language"
+msgstr "Selecionar Idioma"
+
+msgid "Please select a file to upload"
+msgstr "Por favor, selecione um arquivo para enviar" 

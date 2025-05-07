@@ -1,0 +1,135 @@
+{% macro custom_dropdown(id, options, selected_value, placeholder, icon_class="fas fa-globe") %}
+<div class="relative" id="{{ id }}-container">
+    <button type="button" 
+            class="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            id="{{ id }}-button">
+        <div class="flex items-center">
+            <i class="{{ icon_class }} text-gray-400 mr-2"></i>
+            <span class="block truncate" id="{{ id }}-selected-text">{{ placeholder }}</span>
+        </div>
+        <i class="fas fa-chevron-down text-gray-400 ml-2 transition-transform duration-200" id="{{ id }}-icon"></i>
+    </button>
+    
+    <div class="absolute z-[100] w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm hidden"
+         id="{{ id }}-dropdown"
+         style="min-width: max-content;">
+        {% for option in options %}
+        <div class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50"
+             data-value="{{ option.value }}"
+             data-label="{{ option.label }}">
+            <div class="flex items-center">
+                {% if option.flag %}
+                <span class="mr-2">{{ option.flag }}</span>
+                {% endif %}
+                <span class="block truncate">{{ option.label }}</span>
+            </div>
+            <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600 hidden checkmark">
+                <i class="fas fa-check"></i>
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    <input type="hidden" id="{{ id }}-input" value="{{ selected_value }}">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('{{ id }}-container');
+    const button = document.getElementById('{{ id }}-button');
+    const dropdown = document.getElementById('{{ id }}-dropdown');
+    const icon = document.getElementById('{{ id }}-icon');
+    const selectedText = document.getElementById('{{ id }}-selected-text');
+    const input = document.getElementById('{{ id }}-input');
+    const options = dropdown.querySelectorAll('div[data-value]');
+    
+    // Set initial value
+    const initialValue = '{{ selected_value }}';
+    if (initialValue) {
+        const selectedOption = Array.from(options).find(opt => opt.dataset.value === initialValue);
+        if (selectedOption) {
+            selectedText.textContent = selectedOption.dataset.label;
+            selectedOption.querySelector('.checkmark').classList.remove('hidden');
+            selectedOption.classList.add('bg-indigo-50');
+        }
+    }
+    
+    // Toggle dropdown
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Calculate if dropdown should appear above or below
+        const buttonRect = button.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const dropdownHeight = 200; // Approximate max height of dropdown
+        
+        // Check if button is in a floating position (near bottom-right)
+        const isFloating = buttonRect.bottom > window.innerHeight - 100 && buttonRect.right > window.innerWidth - 100;
+        
+        if (isFloating) {
+            // Position above the button
+            dropdown.style.bottom = '125%';
+            dropdown.style.top = 'auto';
+            dropdown.style.marginBottom = '0.25rem';
+            dropdown.style.marginTop = '0';
+            dropdown.style.right = '0';
+        } else if (spaceBelow < dropdownHeight && buttonRect.top > dropdownHeight) {
+            // Position above
+            dropdown.style.bottom = '100%';
+            dropdown.style.top = 'auto';
+            dropdown.style.marginBottom = '0.25rem';
+            dropdown.style.marginTop = '0';
+        } else {
+            // Position below
+            dropdown.style.top = '100%';
+            dropdown.style.bottom = 'auto';
+            dropdown.style.marginTop = '0.25rem';
+            dropdown.style.marginBottom = '0';
+        }
+        
+        dropdown.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    });
+    
+    // Handle option selection
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const value = this.dataset.value;
+            const label = this.dataset.label;
+            
+            // Update selected text
+            selectedText.textContent = label;
+            
+            // Update hidden input
+            input.value = value;
+            
+            // Update checkmarks and background
+            options.forEach(opt => {
+                opt.querySelector('.checkmark').classList.add('hidden');
+                opt.classList.remove('bg-indigo-50');
+            });
+            this.querySelector('.checkmark').classList.remove('hidden');
+            this.classList.add('bg-indigo-50');
+            
+            // Close dropdown
+            dropdown.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+            
+            // Dispatch change event
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        });
+    });
+});
+</script>
+{% endmacro %} 

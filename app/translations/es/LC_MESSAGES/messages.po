@@ -16,6 +16,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "English"
+msgstr "Inglés"
+
+msgid "Português (Brasil)"
+msgstr "Portugués (Brasil)"
+
+msgid "Español"
+msgstr "Español"
+
 msgid "Extract Subtitle"
 msgstr "Extraer Subtítulo"
 
@@ -203,4 +212,19 @@ msgid "An error occurred while processing your file."
 msgstr "Ocurrió un error al procesar tu archivo."
 
 msgid "Please log in to access this page."
-msgstr "Por favor, inicia sesión para acceder a esta página." 
+msgstr "Por favor, inicia sesión para acceder a esta página."
+
+msgid "Select target language"
+msgstr "Seleccione el idioma de destino"
+
+msgid "Select Language"
+msgstr "Seleccionar Idioma"
+
+msgid "Please select a file to upload"
+msgstr "Por favor, seleccione un archivo para subir"
+
+msgid "Select target language"
+msgstr "Seleccione el idioma de destino"
+
+msgid "Select Language"
+msgstr "Seleccionar Idioma" 

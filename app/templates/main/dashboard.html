@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/custom_dropdown.html" import custom_dropdown %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto pb-12">
@@ -64,15 +65,16 @@
 
             <!-- Language Selection Field -->
             <div class="space-y-2">
-                {{ form.language.label(class="block text-sm font-medium text-gray-700") }}
-                <div class="relative">
-                    {{ form.language(class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md") }}
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <i class="fas fa-globe text-gray-400"></i>
-                    </div>
-                </div>
-                {% if form.language.errors %}
-                    {% for error in form.language.errors %}
+                {{ form.target_language.label(class="block text-sm font-medium text-gray-700") }}
+                {{ custom_dropdown(
+                    id="target-language",
+                    options=language_options,
+                    selected_value=form.target_language.data,
+                    placeholder=_('Select target language'),
+                    icon_class="fas fa-globe"
+                ) }}
+                {% if form.target_language.errors %}
+                    {% for error in form.target_language.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
@@ -80,7 +82,7 @@
 
             <!-- Submit Button -->
             <div class="pt-4">
-                {{ form.submit(class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200") }}
+                {{ form.submit(class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 cursor-pointer") }}
             </div>
         </form>
         
@@ -225,6 +227,9 @@ function updateFileName(input) {
         uploadArea.classList.add('hidden');
         selectedFile.classList.remove('hidden');
         selectedFileName.textContent = input.files[0].name;
+        // Remove error state if present
+        input.closest('.space-y-2').querySelector('.error-message')?.remove();
+        input.closest('.space-y-2').classList.remove('has-error');
     } else {
         uploadArea.classList.remove('hidden');
         selectedFile.classList.add('hidden');
@@ -232,39 +237,179 @@ function updateFileName(input) {
     }
 }
 
-// Upload progress handling
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    const progressDiv = document.getElementById('uploadProgress');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
+// Language selection handling
+document.addEventListener('DOMContentLoaded', function() {
+    const languageDropdown = document.getElementById('target-language');
+    const languageInput = document.querySelector('input[name="target_language"]');
     
-    progressDiv.classList.remove('hidden');
+    if (languageDropdown && languageInput) {
+        languageDropdown.addEventListener('change', function(e) {
+            // Remove error state if present
+            const errorMessage = languageDropdown.closest('.space-y-2').querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+                languageDropdown.closest('.space-y-2').classList.remove('has-error');
+            }
+        });
+    }
+});
+
+// Form validation
+function validateForm() {
+    let isValid = true;
+    const fileInput = document.querySelector('input[type="file"]');
+    const languageContainer = document.querySelector('#target-language-container');
+    const languageInput = document.querySelector('input[name="target_language"]');
     
-    const xhr = new XMLHttpRequest();
-    const formData = new FormData(this);
+    if (!fileInput || !languageInput) {
+        console.error('Required form elements not found');
+        return false;
+    }
     
-    xhr.upload.addEventListener('progress', function(e) {
-        if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            progressBar.style.width = percentComplete + '%';
-            progressText.textContent = `${Math.round(percentComplete)}%`;
+    // Validate file
+    if (!fileInput.files || !fileInput.files[0]) {
+        const fileContainer = fileInput.closest('.space-y-2');
+        
+        if (fileContainer && !fileContainer.querySelector('.error-message')) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'text-red-500 text-xs mt-1 error-message';
+            errorMessage.textContent = '{{ _("Please select a file to upload") }}';
+            fileContainer.appendChild(errorMessage);
+            fileContainer.classList.add('has-error');
         }
-    });
+        isValid = false;
+    }
     
-    xhr.addEventListener('load', function() {
-        if (xhr.status === 200) {
-            progressText.textContent = '{{ _("Upload complete") }}';
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+    // Validate language
+    if (!languageInput.value || languageInput.value === "None") {
+        if (languageContainer) {
+            // Remove any existing error message first
+            const existingError = languageContainer.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add new error message
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'text-red-500 text-xs mt-1 error-message';
+            errorMessage.textContent = '{{ _("Please select a target language") }}';
+            languageContainer.appendChild(errorMessage);
+            languageContainer.classList.add('has-error');
         } else {
-            progressText.textContent = '{{ _("Upload failed") }}';
+            console.error('Language container not found');
         }
-    });
+        isValid = false;
+    }
     
-    xhr.open('POST', window.location.href, true);
-    xhr.send(formData);
-    e.preventDefault();
+    return isValid;
+}
+
+// Initialize all form-related functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const languageInput = document.querySelector('input[name="target_language"]');
+
+    // Try to find the dropdown container
+    const languageContainer = document.querySelector('#target-language-container');
+    const _languageInput = languageContainer.querySelector('#target-language-input');
+    
+    if (!uploadForm) {
+        console.error('Upload form not found');
+        return;
+    }
+    
+    // File selection handling
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            updateFileName(this);
+        });
+    }
+    
+    // Language selection handling
+    if (languageContainer && _languageInput) {
+        _languageInput.addEventListener('change', function(e) {
+            // Preserve the original case of the language code
+            const value = e.target.value;
+            languageInput.value = value;
+            // Remove error state if present
+            const errorMessage = languageContainer.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+                languageContainer.classList.remove('has-error');
+            }
+        });
+    }
+    
+    // Form submission handling
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate form before proceeding
+        if (!validateForm()) {
+            return;
+        }
+        
+        const progressDiv = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        if (!progressDiv || !progressBar || !progressText) {
+            console.error('Progress elements not found');
+            return;
+        }
+        
+        progressDiv.classList.remove('hidden');
+        
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData(this);
+        
+        // Add CSRF token to headers
+        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            return;
+        }
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+                progressText.textContent = `${Math.round(percentComplete)}%`;
+            }
+        });
+        
+        xhr.addEventListener('load', function() {
+            if (xhr.status === 200) {
+                progressText.textContent = '{{ _("Upload complete") }}';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                progressText.textContent = '{{ _("Upload failed") }}';
+                console.error('Upload failed:', xhr.responseText);
+                // Show error message to user
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'mt-2 text-red-500 text-sm';
+                errorDiv.textContent = xhr.responseText || '{{ _("Upload failed. Please try again.") }}';
+                progressDiv.appendChild(errorDiv);
+            }
+        });
+        
+        xhr.addEventListener('error', function() {
+            progressText.textContent = '{{ _("Upload failed") }}';
+            console.error('Upload failed:', xhr.statusText);
+            // Show error message to user
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'mt-2 text-red-500 text-sm';
+            errorDiv.textContent = '{{ _("Network error. Please try again.") }}';
+            progressDiv.appendChild(errorDiv);
+        });
+        
+        xhr.open('POST', window.location.href, true);
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        xhr.send(formData);
+    });
 });
 
 // SRT Preview handling

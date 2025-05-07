@@ -1,3 +1,5 @@
+{% from "components/custom_dropdown.html" import custom_dropdown %}
+
 <!DOCTYPE html>
 <html lang="{{ g.get('lang_code', 'en') }}">
 <head>
@@ -21,7 +23,6 @@
             document.querySelectorAll('.language-selector').forEach(selector => {
                 selector.addEventListener('change', function() {
                     const language = this.value;
-                    console.log('Changing language to:', language);
                     
                     fetch('{{ url_for("main.set_language") }}', {
                         method: 'POST',
@@ -32,13 +33,10 @@
                         body: JSON.stringify({ language: language })
                     })
                     .then(response => {
-                        console.log('Response status:', response.status);
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Response data:', data);
                         if (data.success) {
-                            console.log('Language change successful, reloading page...');
                             window.location.reload(true);
                         } else {
                             console.error('{{ _("Failed to change language") }}:', data.message);
@@ -182,11 +180,17 @@
 
     <!-- Language Selector -->
     <div class="fixed bottom-4 right-4 z-50">
-        <select id="language-selector" class="language-selector block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-            <option value="en" {% if g.lang_code == 'en' %}selected{% endif %}>English</option>
-            <option value="pt-BR" {% if g.lang_code == 'pt_BR' %}selected{% endif %}>Português</option>
-            <option value="es" {% if g.lang_code == 'es' %}selected{% endif %}>Español</option>
-        </select>
+        {{ custom_dropdown(
+            id="language-selector",
+            options=[
+                {'value': 'en', 'label': _('English'), 'flag': '🇺🇸'},
+                {'value': 'pt_BR', 'label': _('Português (Brasil)'), 'flag': '🇧🇷'},
+                {'value': 'es', 'label': _('Español'), 'flag': '🇪🇸'}
+            ],
+            selected_value=g.get('lang_code', 'en'),
+            placeholder=_('Select Language'),
+            icon_class="fas fa-language"
+        ) }}
     </div>
 
     <!-- Flash Messages -->
@@ -220,6 +224,35 @@
                     const expanded = this.getAttribute('aria-expanded') === 'true';
                     this.setAttribute('aria-expanded', !expanded);
                     mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            // Language selector change handler
+            const languageSelector = document.getElementById('language-selector-input');
+            if (languageSelector) {
+                languageSelector.addEventListener('change', function() {
+                    const language = this.value;
+                    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    fetch('{{ url_for("main.set_language") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': token
+                        },
+                        body: JSON.stringify({ language: language })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload(true);
+                        } else {
+                            console.error('{{ _("Failed to change language") }}:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('{{ _("Error") }}:', error);
+                    });
                 });
             }
         });
