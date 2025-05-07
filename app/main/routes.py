@@ -46,14 +46,10 @@ def dashboard():
             # Initialize subtitle extractor
             extractor = SubtitleExtractor(current_app.config['UPLOAD_FOLDER'])
             
-            # Save the uploaded file
-            filename, file_path = extractor.save_file(form.file.data)
-            logger.info(f"File saved successfully: {filename}")
-            
-            # Create extraction record
+            # Create extraction record first
             extraction = SubtitleExtraction(
                 user_id=current_user.id,
-                original_filename=filename,
+                original_filename='',  # Will be set after saving
                 srt_filename='',  # Will be set after processing
                 target_language=form.target_language.data,
                 status='pending'
@@ -61,6 +57,14 @@ def dashboard():
             db.session.add(extraction)
             db.session.commit()
             extraction_id = extraction.id
+            
+            # Save the uploaded file
+            filename, file_path = extractor.save_file(form.file.data, extraction_id)
+            logger.info(f"File saved successfully: {filename}")
+            
+            # Update extraction record with filename
+            extraction.original_filename = filename
+            db.session.commit()
             
             # Start processing in background
             def process_extraction():
