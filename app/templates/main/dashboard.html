@@ -90,10 +90,11 @@
         <div id="uploadProgress" class="hidden mt-6">
             <div class="relative pt-1">
                 <div class="flex mb-2 items-center justify-between">
-                    <div>
+                    <div class="flex items-center space-x-4">
                         <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
                             {{ _('Uploading...') }}
                         </span>
+                        <span id="uploadSpeed" class="text-xs text-gray-600"></span>
                     </div>
                     <div class="text-right">
                         <span id="progressText" class="text-xs font-semibold inline-block text-indigo-600">0%</span>
@@ -101,6 +102,20 @@
                 </div>
                 <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
                     <div id="progressBar" style="width:0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-600">
+                    <div>
+                        <span id="uploadedSize">0 MB</span> / <span id="totalSize">0 MB</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span id="remainingTime">{{ _('Calculating...') }}</span>
+                        <div id="processingSpinner" class="hidden ml-2">
+                            <svg class="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,7 +148,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for extraction in extractions %}
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" data-extraction-id="{{ extraction.id }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ extraction.original_filename }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.target_language }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -353,6 +368,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const progressDiv = document.getElementById('uploadProgress');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
+        const uploadSpeed = document.getElementById('uploadSpeed');
+        const uploadedSize = document.getElementById('uploadedSize');
+        const totalSize = document.getElementById('totalSize');
         
         if (!progressDiv || !progressBar || !progressText) {
             console.error('Progress elements not found');
@@ -363,32 +381,107 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const xhr = new XMLHttpRequest();
         const formData = new FormData(this);
+        const file = formData.get('file');
+        const fileSize = file.size;
+        const startTime = new Date().getTime();
+        let lastLoaded = 0;
+        let lastTime = startTime;
         
-        // Add CSRF token to headers
-        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
-        if (!csrfToken) {
-            console.error('CSRF token not found');
-            return;
+        // Format bytes to human readable format
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
         
-        xhr.upload.addEventListener('progress', function(e) {
+        // Update progress information
+        function updateProgress(e) {
             if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                progressBar.style.width = percentComplete + '%';
-                progressText.textContent = `${Math.round(percentComplete)}%`;
+                const currentTime = new Date().getTime();
+                const loaded = e.loaded;
+                const total = e.total;
+                
+                // Calculate upload speed
+                const timeDiff = (currentTime - lastTime) / 1000; // in seconds
+                const loadedDiff = loaded - lastLoaded;
+                const speed = loadedDiff / timeDiff; // bytes per second
+                
+                // Always show speed, even if it's low
+                if (timeDiff > 0) {
+                    const currentSpeed = loadedDiff / timeDiff;
+                    uploadSpeed.textContent = formatBytes(currentSpeed) + '/s';
+                    
+                    // Calculate remaining time
+                    const remainingBytes = total - loaded;
+                    const remainingSeconds = remainingBytes / currentSpeed;
+                    
+                    if (remainingSeconds > 0 && remainingSeconds < 3600) {
+                        const minutes = Math.floor(remainingSeconds / 60);
+                        const seconds = Math.floor(remainingSeconds % 60);
+                        document.getElementById('remainingTime').textContent = 
+                            minutes > 0 ? 
+                            `${minutes}m ${seconds}s` : 
+                            `${seconds}s`;
+                    } else if (remainingSeconds >= 3600) {
+                        const hours = Math.floor(remainingSeconds / 3600);
+                        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                        document.getElementById('remainingTime').textContent = 
+                            `${hours}h ${minutes}m`;
+                    } else {
+                        document.getElementById('remainingTime').textContent = '{{ _("Almost done...") }}';
+                    }
+                } else {
+                    // If we don't have enough data yet, show initial values
+                    uploadSpeed.textContent = '0 B/s';
+                    document.getElementById('remainingTime').textContent = '{{ _("Starting...") }}';
+                }
+                
+                // Calculate progress
+                const progress = (loaded / total) * 100;
+                
+                // Update progress bar and text
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+                
+                // Show spinner when progress is 100%
+                const spinner = document.getElementById('processingSpinner');
+                if (progress >= 100) {
+                    spinner.classList.remove('hidden');
+                    document.querySelector('.text-xs.font-semibold').textContent = '{{ _("Processing...") }}';
+                    document.getElementById('remainingTime').textContent = '{{ _("Preparing subtitles...") }}';
+                } else {
+                    spinner.classList.add('hidden');
+                }
+                
+                // Update size information
+                uploadedSize.textContent = formatBytes(loaded);
+                totalSize.textContent = formatBytes(total);
+                
+                // Update last values
+                lastLoaded = loaded;
+                lastTime = currentTime;
             }
-        });
+        }
+        
+        xhr.upload.addEventListener('progress', updateProgress);
         
         xhr.addEventListener('load', function() {
             if (xhr.status === 200) {
-                progressText.textContent = '{{ _("Upload complete") }}';
+                // Show spinner and update status
+                document.getElementById('processingSpinner').classList.remove('hidden');
+                document.querySelector('.text-xs.font-semibold').textContent = '{{ _("Processing...") }}';
+                document.getElementById('remainingTime').textContent = '{{ _("Preparing subtitles...") }}';
+                
+                // Reload after a short delay to show the processing state
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
             } else {
                 progressText.textContent = '{{ _("Upload failed") }}';
                 console.error('Upload failed:', xhr.responseText);
-                // Show error message to user
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'mt-2 text-red-500 text-sm';
                 errorDiv.textContent = xhr.responseText || '{{ _("Upload failed. Please try again.") }}';
@@ -399,12 +492,18 @@ document.addEventListener('DOMContentLoaded', function() {
         xhr.addEventListener('error', function() {
             progressText.textContent = '{{ _("Upload failed") }}';
             console.error('Upload failed:', xhr.statusText);
-            // Show error message to user
             const errorDiv = document.createElement('div');
             errorDiv.className = 'mt-2 text-red-500 text-sm';
             errorDiv.textContent = '{{ _("Network error. Please try again.") }}';
             progressDiv.appendChild(errorDiv);
         });
+        
+        // Add CSRF token to headers
+        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            return;
+        }
         
         xhr.open('POST', window.location.href, true);
         xhr.setRequestHeader('X-CSRFToken', csrfToken);
@@ -437,17 +536,63 @@ function pollProgress() {
         .then(data => {
             data.forEach(extraction => {
                 const progressBar = document.querySelector(`[data-extraction-id="${extraction.id}"] .progress-bar`);
-                if (progressBar) {
-                    progressBar.style.width = `${extraction.progress}%`;
+                const progressText = document.querySelector(`[data-extraction-id="${extraction.id}"] .progress-text`);
+                if (progressBar && progressText) {
+                    // Apply easing to make it slow down as it approaches 95%
+                    const maxProgress = 95;
+                    const easedProgress = maxProgress * (1 - Math.pow(1 - (extraction.progress / 100), 3));
+                    
+                    progressBar.style.width = `${easedProgress}%`;
+                    progressText.textContent = `${Math.round(easedProgress)}%`;
+                    
+                    // Update status text based on progress
+                    const statusText = document.querySelector(`[data-extraction-id="${extraction.id}"] .status-text`);
+                    if (statusText) {
+                        if (extraction.progress < 5) {
+                            statusText.textContent = '{{ _("Initializing...") }}';
+                        } else if (extraction.progress < 15) {
+                            statusText.textContent = '{{ _("Saving file...") }}';
+                        } else if (extraction.progress < 20) {
+                            statusText.textContent = '{{ _("Loading model...") }}';
+                        } else if (extraction.progress < 60) {
+                            statusText.textContent = '{{ _("Transcribing...") }}';
+                        } else if (extraction.progress < 95) {
+                            statusText.textContent = '{{ _("Generating subtitles...") }}';
+                        } else {
+                            statusText.textContent = '{{ _("Finalizing...") }}';
+                        }
+                    }
                 }
             });
         })
         .catch(error => console.error('Error polling progress:', error));
 }
 
-// Poll progress every 5 seconds if there are processing extractions
+// Poll progress every 2 seconds if there are processing extractions
 if (document.querySelector('[data-status="processing"]')) {
-    setInterval(pollProgress, 5000);
+    setInterval(pollProgress, 2000);
 }
+
+// Update the extraction table row to include data attributes
+document.addEventListener('DOMContentLoaded', function() {
+    const extractionRows = document.querySelectorAll('tr[data-extraction-id]');
+    extractionRows.forEach(row => {
+        const progressCell = row.querySelector('td:nth-child(4)');
+        if (progressCell) {
+            const progressBar = progressCell.querySelector('.bg-indigo-600');
+            if (progressBar) {
+                const progressText = document.createElement('span');
+                progressText.className = 'progress-text ml-2 text-xs text-gray-500';
+                progressText.textContent = '0%';
+                progressBar.parentNode.appendChild(progressText);
+                
+                const statusText = document.createElement('span');
+                statusText.className = 'status-text block text-xs text-gray-500 mt-1';
+                statusText.textContent = '{{ _("Initializing...") }}';
+                progressCell.appendChild(statusText);
+            }
+        }
+    });
+});
 </script>
 {% endblock %} 

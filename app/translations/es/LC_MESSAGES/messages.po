@@ -161,7 +161,13 @@ msgid "Upload complete"
 msgstr "Subida completada"
 
 msgid "Upload failed"
-msgstr "Error en la subida"
+msgstr "Error al subir"
+
+msgid "Upload failed. Please try again."
+msgstr "Error al subir. Por favor, inténtelo de nuevo."
+
+msgid "Network error. Please try again."
+msgstr "Error de red. Por favor, inténtelo de nuevo."
 
 msgid "Processing..."
 msgstr "Procesando..."
@@ -227,4 +233,13 @@ msgid "Select target language"
 msgstr "Seleccione el idioma de destino"
 
 msgid "Select Language"
-msgstr "Seleccionar Idioma" 
+msgstr "Seleccionar Idioma"
+
+msgid "Preparing subtitles..."
+msgstr "Preparando subtítulos..."
+
+msgid "Starting..."
+msgstr "Iniciando..."
+
+msgid "Almost done..."
+msgstr "Casi terminado..." 

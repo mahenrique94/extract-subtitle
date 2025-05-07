@@ -18,27 +18,45 @@ class SubtitleExtractor:
         logger.info("Whisper model loaded successfully")
         os.makedirs(upload_folder, exist_ok=True)
 
-    def save_file(self, file):
+    def save_file(self, file, extraction_id):
         logger.info(f"Saving file: {file.filename}")
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"{timestamp}_{filename}"
-        file_path = os.path.join(self.upload_folder, unique_filename)
-        file.save(file_path)
-        logger.info(f"File saved as: {unique_filename}")
-        return unique_filename, file_path
+        try:
+            # Update progress to 5% - Starting file save
+            extraction = SubtitleExtraction.query.get(extraction_id)
+            extraction.progress = 5
+            db.session.commit()
+
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"{timestamp}_{filename}"
+            file_path = os.path.join(self.upload_folder, unique_filename)
+            
+            # Update progress to 10% - File saved
+            file.save(file_path)
+            extraction.progress = 10
+            db.session.commit()
+            
+            logger.info(f"File saved as: {unique_filename}")
+            return unique_filename, file_path
+        except Exception as e:
+            logger.error(f"Error saving file: {str(e)}")
+            raise
 
     def extract_subtitles(self, file_path, target_language, extraction_id):
         logger.info(f"Starting subtitle extraction for {file_path} in {target_language}")
         try:
-            # Update progress to 10% - Starting transcription
+            # Update progress to 15% - Starting transcription
             extraction = SubtitleExtraction.query.get(extraction_id)
-            extraction.progress = 10
+            extraction.progress = 15
             db.session.commit()
 
             # Handle language code for Whisper
             whisper_lang = target_language.split('-')[0]  # Convert 'pt-BR' to 'pt' for Whisper
             logger.info(f"Using Whisper language code: {whisper_lang}")
+
+            # Update progress to 20% - Model loaded and ready
+            extraction.progress = 20
+            db.session.commit()
 
             # Transcribe the audio
             logger.info("Starting transcription...")
@@ -51,8 +69,8 @@ class SubtitleExtractor:
             )
             logger.info("Transcription completed successfully")
 
-            # Update progress to 50% - Transcription complete
-            extraction.progress = 50
+            # Update progress to 60% - Transcription complete
+            extraction.progress = 60
             db.session.commit()
 
             # Generate SRT filename
@@ -69,10 +87,14 @@ class SubtitleExtractor:
                     text = segment['text'].strip()
                     f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
                     
-                    # Update progress based on segments processed
-                    progress = 50 + (i / total_segments * 50)  # 50-100% for SRT generation
+                    # Update progress based on segments processed (60-95%)
+                    progress = 60 + (i / total_segments * 35)
                     extraction.progress = progress
                     db.session.commit()
+
+            # Update progress to 95% - SRT file generated
+            extraction.progress = 95
+            db.session.commit()
 
             logger.info("SRT file generated successfully")
             return srt_filename

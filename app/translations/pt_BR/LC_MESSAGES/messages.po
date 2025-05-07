@@ -284,4 +284,28 @@ msgid "Select Language"
 msgstr "Selecionar Idioma"
 
 msgid "Please select a file to upload"
-msgstr "Por favor, selecione um arquivo para enviar" 
+msgstr "Por favor, selecione um arquivo para enviar"
+
+msgid "Processing..."
+msgstr "Processando..."
+
+msgid "Preparing subtitles..."
+msgstr "Preparando legendas..."
+
+msgid "Starting..."
+msgstr "Iniciando..."
+
+msgid "Almost done..."
+msgstr "Quase terminado..."
+
+msgid "Uploading..."
+msgstr "Enviando..."
+
+msgid "Upload failed"
+msgstr "Falha no envio"
+
+msgid "Upload failed. Please try again."
+msgstr "Falha no envio. Por favor, tente novamente."
+
+msgid "Network error. Please try again."
+msgstr "Erro de rede. Por favor, tente novamente." 

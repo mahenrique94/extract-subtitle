@@ -10,6 +10,7 @@ import threading
 from app import create_app
 from flask_babel import _
 from app.config.languages import SUPPORTED_LANGUAGES
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ def dashboard():
     if form.validate_on_submit():
         try:
             logger.info(f"Processing file upload: {form.file.data.filename}")
+            
             # Initialize subtitle extractor
             extractor = SubtitleExtractor(current_app.config['UPLOAD_FOLDER'])
             
@@ -48,23 +50,17 @@ def dashboard():
             filename, file_path = extractor.save_file(form.file.data)
             logger.info(f"File saved successfully: {filename}")
             
-            # Ensure the language code is in the correct case
-            target_language = form.target_language.data
-            if target_language.lower() == 'pt_br':
-                target_language = 'pt_BR'
-            
             # Create extraction record
             extraction = SubtitleExtraction(
                 user_id=current_user.id,
                 original_filename=filename,
                 srt_filename='',  # Will be set after processing
-                target_language=target_language,
+                target_language=form.target_language.data,
                 status='pending'
             )
             db.session.add(extraction)
             db.session.commit()
-            extraction_id = extraction.id  # Capture the ID for the background task
-            logger.info(f"Created extraction record with ID: {extraction_id}")
+            extraction_id = extraction.id
             
             # Start processing in background
             def process_extraction():
@@ -81,7 +77,7 @@ def dashboard():
                         db.session.commit()
                         
                         # Convert language code for Whisper (e.g., pt_BR -> pt)
-                        whisper_language = target_language.split('_')[0].lower()
+                        whisper_language = extraction.target_language.split('_')[0].lower()
                         
                         # Extract subtitles
                         srt_filename = extractor.extract_subtitles(file_path, whisper_language, extraction_id)
@@ -164,7 +160,9 @@ def extraction_progress():
         # Return progress data
         progress_data = [{
             'id': e.id,
-            'progress': e.progress
+            'progress': e.progress,
+            'status': e.status,
+            'error_message': e.error_message
         } for e in extractions]
         
         return jsonify(progress_data)
