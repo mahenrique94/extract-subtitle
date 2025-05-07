@@ -45,7 +45,7 @@ class SubtitleExtractor:
             result = self.model.transcribe(
                 file_path,
                 language=whisper_lang,
-                task="translate" if whisper_lang != "en" else "transcribe",
+                task="transcribe",  # Always use transcribe to keep original language
                 verbose=True,
                 word_timestamps=True
             )
