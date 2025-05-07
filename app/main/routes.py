@@ -11,11 +11,17 @@ from app import create_app
 from flask_babel import _
 from app.config.languages import SUPPORTED_LANGUAGES
 from datetime import datetime
+from werkzeug.utils import secure_filename
+from threading import Thread
+from app.services.translator import SubtitleTranslator
 
 logger = logging.getLogger(__name__)
 
 # Get the blueprint instance
 from app.main import main
+
+# Initialize translator
+translator = SubtitleTranslator()
 
 @main.route('/')
 def index():
@@ -33,10 +39,18 @@ def dashboard():
     logger.debug('Accessing dashboard route')
     form = UploadForm()
     
-    # Prepare language options for the template
+    # Get available languages for the dropdown
     language_options = [
-        {'value': code, 'label': _(info['display_name']), 'flag': info['flag']}
-        for code, info in SUPPORTED_LANGUAGES.items()
+        {'value': 'en', 'label': _('English')},
+        {'value': 'pt', 'label': _('Portuguese')},
+        {'value': 'es', 'label': _('Spanish')},
+        {'value': 'fr', 'label': _('French')},
+        {'value': 'de', 'label': _('German')},
+        {'value': 'it', 'label': _('Italian')},
+        {'value': 'ja', 'label': _('Japanese')},
+        {'value': 'ko', 'label': _('Korean')},
+        {'value': 'zh', 'label': _('Chinese')},
+        {'value': 'ru', 'label': _('Russian')}
     ]
     
     if form.validate_on_submit():
@@ -51,7 +65,7 @@ def dashboard():
                 user_id=current_user.id,
                 original_filename='',  # Will be set after saving
                 srt_filename='',  # Will be set after processing
-                target_language=form.target_language.data,
+                target_language='unknown',  # Will be updated with detected language
                 status='pending'
             )
             db.session.add(extraction)
@@ -59,8 +73,9 @@ def dashboard():
             extraction_id = extraction.id
             
             # Save the uploaded file
-            filename, file_path = extractor.save_file(form.file.data, extraction_id)
-            logger.info(f"File saved successfully: {filename}")
+            filename = secure_filename(form.file.data.filename)
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            form.file.data.save(file_path)
             
             # Update extraction record with filename
             extraction.original_filename = filename
@@ -68,8 +83,9 @@ def dashboard():
             
             # Start processing in background
             def process_extraction():
-                try:
-                    with create_app().app_context():
+                app = create_app()
+                with app.app_context():
+                    try:
                         # Get the extraction record
                         extraction = SubtitleExtraction.query.get(extraction_id)
                         if not extraction:
@@ -78,43 +94,48 @@ def dashboard():
                         
                         # Update status to processing
                         extraction.status = 'processing'
+                        extraction.progress = 0
                         db.session.commit()
                         
-                        # Convert language code for Whisper (e.g., pt_BR -> pt)
-                        whisper_language = extraction.target_language.split('_')[0].lower()
-                        
-                        # Extract subtitles
-                        srt_filename = extractor.extract_subtitles(file_path, whisper_language, extraction_id)
+                        # Extract subtitles using original audio language
+                        srt_filename, detected_language = extractor.extract_subtitles(file_path, extraction_id)
                         
                         # Update extraction record
                         extraction.srt_filename = srt_filename
+                        extraction.target_language = detected_language  # Store the detected language
                         extraction.status = 'completed'
+                        extraction.progress = 100
+                        extraction.completed_at = datetime.utcnow()
                         db.session.commit()
                         
                         logger.info(f"Extraction completed successfully: {extraction_id}")
-                except Exception as e:
-                    logger.error(f"Error processing extraction {extraction_id}: {str(e)}")
-                    try:
-                        with create_app().app_context():
+                    except Exception as e:
+                        logger.error(f"Error processing extraction {extraction_id}: {str(e)}")
+                        try:
                             extraction = SubtitleExtraction.query.get(extraction_id)
                             if extraction:
                                 extraction.status = 'failed'
                                 extraction.error_message = str(e)
                                 db.session.commit()
-                    except Exception as inner_e:
-                        logger.error(f"Error updating failed status: {str(inner_e)}")
+                        except Exception as inner_e:
+                            logger.error(f"Error updating failed status: {str(inner_e)}")
             
             # Start background processing
-            thread = threading.Thread(target=process_extraction)
+            thread = Thread(target=process_extraction)
+            thread.daemon = True
             thread.start()
             
-            flash(_('Your file is being processed. You will be notified when it\'s ready.'), 'info')
+            flash(_('File uploaded successfully. Extraction started.'), 'success')
             return redirect(url_for('main.dashboard'))
             
         except Exception as e:
-            logger.error(f"Error processing upload: {str(e)}")
+            logger.error(f"Error in upload route: {str(e)}")
             flash(_('An error occurred while processing your file.'), 'error')
             return redirect(url_for('main.dashboard'))
+    
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{getattr(form, field).label.text}: {error}", 'error')
     
     # Get user's extractions
     extractions = SubtitleExtraction.query.filter_by(user_id=current_user.id).order_by(SubtitleExtraction.created_at.desc()).all()
@@ -123,32 +144,73 @@ def dashboard():
                          title=_('Dashboard'),
                          form=form,
                          extractions=extractions,
-                         language_options=language_options)
+                         language_options=language_options,
+                         current_language=session.get('language', 'en'))
 
 @main.route('/download/<filename>')
 @login_required
 def download_file(filename):
-    logger.debug(f'Accessing download route for file: {filename}')
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
-
-@main.route('/preview/<filename>')
-@login_required
-def preview_file(filename):
-    logger.debug(f'Accessing preview route for file: {filename}')
+    """Download SRT file."""
     try:
-        # Verify the file belongs to the current user
+        # Verify file ownership
         extraction = SubtitleExtraction.query.filter_by(
             user_id=current_user.id,
             srt_filename=filename
         ).first_or_404()
         
+        # Get language from query parameter, default to original language
+        language = request.args.get('language', extraction.target_language)
+        
+        # Get the base filename without language suffix
+        base_filename = filename.replace('_' + extraction.target_language + '.srt', '.srt')
+        
+        # Construct the language-specific filename
+        lang_filename = base_filename.replace('.srt', f'_{language}.srt')
+        lang_path = os.path.join(current_app.config['UPLOAD_FOLDER'], lang_filename)
+        
+        # If the language-specific file doesn't exist, return 404
+        if not os.path.exists(lang_path):
+            return "File not found", 404
+            
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'], lang_filename, as_attachment=True)
+    except Exception as e:
+        current_app.logger.error(f"Error downloading SRT file: {str(e)}")
+        return str(e), 500
+
+@main.route('/preview/<filename>')
+@login_required
+def preview_srt(filename):
+    """Preview SRT file content."""
+    try:
+        # Verify file ownership
+        extraction = SubtitleExtraction.query.filter_by(
+            user_id=current_user.id,
+            srt_filename=filename
+        ).first_or_404()
+        
+        # Read the original SRT content
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(file_path):
+            return jsonify({
+                'error': _('File not found'),
+                'status': 'error'
+            }), 404
+            
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        return content
+            
+        return jsonify({
+            'content': content,
+            'detected_language': extraction.target_language,
+            'status': 'success'
+        })
+        
     except Exception as e:
-        logger.error(f"Error previewing file: {str(e)}")
-        return "Error loading file preview", 500
+        current_app.logger.error(f"Error previewing SRT file: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
 
 @main.route('/extraction-progress')
 @login_required
@@ -189,4 +251,34 @@ def set_language():
         return jsonify({'success': False, 'message': _('No language specified')}), 400
     except Exception as e:
         logger.error(f"Error setting language: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/save-srt', methods=['POST'])
+@login_required
+def save_srt():
+    logger.debug('Accessing save SRT route')
+    try:
+        data = request.get_json()
+        if not data or 'filename' not in data or 'content' not in data:
+            return jsonify({'success': False, 'message': _('Missing required data')}), 400
+
+        filename = data['filename']
+        content = data['content']
+
+        # Verify the file belongs to the current user
+        extraction = SubtitleExtraction.query.filter_by(
+            user_id=current_user.id,
+            srt_filename=filename
+        ).first_or_404()
+
+        # Save the content to the file
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+        logger.info(f"SRT file updated successfully: {filename}")
+        return jsonify({'success': True})
+
+    except Exception as e:
+        logger.error(f"Error saving SRT file: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500 

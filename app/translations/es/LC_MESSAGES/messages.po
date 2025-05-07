@@ -242,4 +242,10 @@ msgid "Starting..."
 msgstr "Iniciando..."
 
 msgid "Almost done..."
-msgstr "Casi terminado..." 
+msgstr "Casi terminado..."
+
+msgid "Changes saved successfully!"
+msgstr "¡Cambios guardados exitosamente!"
+
+msgid "Failed to save changes"
+msgstr "Error al guardar los cambios" 

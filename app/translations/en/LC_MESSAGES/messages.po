@@ -138,4 +138,91 @@ msgid "Ready to get started?"
 msgstr "Ready to get started?"
 
 msgid "Create your account today."
-msgstr "Create your account today." 
+msgstr "Create your account today."
+
+msgid "SRT Preview"
+msgstr "SRT Preview"
+
+msgid "Save Changes"
+msgstr "Save Changes"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Saving..."
+msgstr "Saving..."
+
+msgid "Success!"
+msgstr "Success!"
+
+msgid "SRT file has been updated."
+msgstr "SRT file has been updated."
+
+msgid "Error saving SRT file"
+msgstr "Error saving SRT file"
+
+msgid "Preview Language"
+msgstr "Preview Language"
+
+msgid "Select language"
+msgstr "Select language"
+
+msgid "Error updating SRT preview"
+msgstr "Error updating SRT preview"
+
+msgid "Download SRT"
+msgstr "Download SRT"
+
+msgid "English"
+msgstr "English"
+
+msgid "Portuguese"
+msgstr "Portuguese"
+
+msgid "Spanish"
+msgstr "Spanish"
+
+msgid "French"
+msgstr "French"
+
+msgid "German"
+msgstr "German"
+
+msgid "Italian"
+msgstr "Italian"
+
+msgid "Japanese"
+msgstr "Japanese"
+
+msgid "Korean"
+msgstr "Korean"
+
+msgid "Chinese"
+msgstr "Chinese"
+
+msgid "Russian"
+msgstr "Russian"
+
+msgid "Loading..."
+msgstr "Loading..."
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Success"
+msgstr "Success"
+
+msgid "Error loading SRT file"
+msgstr "Error loading SRT file"
+
+msgid "Unsupported target language: {}"
+msgstr "Unsupported target language: {}"
+
+msgid "Original file not found"
+msgstr "Original file not found"
+
+msgid "Changes saved successfully!"
+msgstr "Changes saved successfully!"
+
+msgid "Failed to save changes"
+msgstr "Failed to save changes" 

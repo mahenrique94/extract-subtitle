@@ -131,7 +131,7 @@ msgid "Download SRT"
 msgstr "Baixar SRT"
 
 msgid "SRT Preview"
-msgstr "Visualização do SRT"
+msgstr "Visualizar SRT"
 
 msgid "Preview"
 msgstr "Visualizar"
@@ -308,4 +308,88 @@ msgid "Upload failed. Please try again."
 msgstr "Falha no envio. Por favor, tente novamente."
 
 msgid "Network error. Please try again."
-msgstr "Erro de rede. Por favor, tente novamente." 
+msgstr "Erro de rede. Por favor, tente novamente."
+
+msgid "Save Changes"
+msgstr "Salvar Alterações"
+
+msgid "Saving..."
+msgstr "Salvando..."
+
+msgid "Success!"
+msgstr "Sucesso!"
+
+msgid "SRT file has been updated."
+msgstr "Arquivo SRT foi atualizado."
+
+msgid "Error saving SRT file"
+msgstr "Erro ao salvar arquivo SRT"
+
+msgid "Preview Language"
+msgstr "Idioma da Visualização"
+
+msgid "Select language"
+msgstr "Selecionar idioma"
+
+msgid "Error updating SRT preview"
+msgstr "Erro ao atualizar visualização do SRT"
+
+msgid "Download SRT"
+msgstr "Baixar SRT"
+
+msgid "Portuguese"
+msgstr "Português"
+
+msgid "Spanish"
+msgstr "Espanhol"
+
+msgid "French"
+msgstr "Francês"
+
+msgid "German"
+msgstr "Alemão"
+
+msgid "Italian"
+msgstr "Italiano"
+
+msgid "Japanese"
+msgstr "Japonês"
+
+msgid "Korean"
+msgstr "Coreano"
+
+msgid "Chinese"
+msgstr "Chinês"
+
+msgid "Russian"
+msgstr "Russo"
+
+msgid "Loading..."
+msgstr "Carregando..."
+
+msgid "Error"
+msgstr "Erro"
+
+msgid "Success"
+msgstr "Sucesso"
+
+msgid "Error loading SRT file"
+msgstr "Erro ao carregar arquivo SRT"
+
+msgid "SRT file has been updated."
+msgstr "Arquivo SRT foi atualizado."
+
+msgid "Error saving SRT file"
+msgstr "Erro ao salvar arquivo SRT"
+
+msgid "Unsupported target language: {}"
+msgstr "Idioma de destino não suportado: {}"
+
+msgid "Original file not found"
+msgstr "Arquivo original não encontrado"
+
+msgid "Changes saved successfully!"
+msgstr "Alterações salvas com sucesso!"
+
+msgid "Failed to save changes"
+msgstr "Falha ao salvar alterações" 

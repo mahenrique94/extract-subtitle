@@ -1,7 +1,73 @@
 {% extends "base.html" %}
 {% from "components/custom_dropdown.html" import custom_dropdown %}
 
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+.progress-bar-fill {
+    width: var(--progress);
+    transition: width 500ms ease-in-out;
+}
+
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: slideIn 0.3s ease-out;
+    max-width: 24rem;
+    background-color: white;
+}
+
+.toast-success {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.toast-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Add toast container at the beginning of content block -->
+<div id="toastContainer" class="toast-container"></div>
+
 <div class="max-w-4xl mx-auto pb-12">
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -58,23 +124,6 @@
                 </label>
                 {% if form.file.errors %}
                     {% for error in form.file.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <!-- Language Selection Field -->
-            <div class="space-y-2">
-                {{ form.target_language.label(class="block text-sm font-medium text-gray-700") }}
-                {{ custom_dropdown(
-                    id="target-language",
-                    options=language_options,
-                    selected_value=form.target_language.data,
-                    placeholder=_('Select target language'),
-                    icon_class="fas fa-globe"
-                ) }}
-                {% if form.target_language.errors %}
-                    {% for error in form.target_language.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
@@ -163,7 +212,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {% if extraction.status == 'processing' %}
                                     <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                        <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: {{ extraction.progress }}%"></div>
+                                        <div class="bg-indigo-600 h-2.5 rounded-full progress-bar-fill" 
+                                             style="--progress: {{ extraction.progress }}%"></div>
                                     </div>
                                 {% elif extraction.status == 'completed' %}
                                     {{ _('Completed') }}
@@ -176,18 +226,12 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 {% if extraction.status == 'completed' %}
-                                    <div class="flex space-x-3">
-                                        <a href="{{ url_for('main.download_file', filename=extraction.srt_filename) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900 flex items-center">
-                                            <i class="fas fa-download mr-1"></i>
-                                            {{ _('Download SRT') }}
-                                        </a>
-                                        <button onclick="previewSrt('{{ extraction.srt_filename }}')" 
-                                                class="text-green-600 hover:text-green-900 flex items-center">
-                                            <i class="fas fa-eye mr-1"></i>
-                                            {{ _('Preview') }}
-                                        </button>
-                                    </div>
+                                    <button type="button" 
+                                            class="text-indigo-600 hover:text-indigo-900 flex items-center"
+                                            onclick="openPreviewModal('{{ extraction.srt_filename }}')">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        {{ _('Preview') }}
+                                    </button>
                                 {% elif extraction.status == 'failed' %}
                                     <span class="text-red-600 flex items-center">
                                         <i class="fas fa-exclamation-circle mr-1"></i>
@@ -210,20 +254,55 @@
 </div>
 
 <!-- SRT Preview Modal -->
-<div id="srtPreviewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
-    <div class="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">{{ _('SRT Preview') }}</h3>
-                <button onclick="closeSrtPreview()" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <pre id="srtContent" class="whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-96 overflow-y-auto"></pre>
-            <div class="mt-4 flex justify-end">
-                <button onclick="closeSrtPreview()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-200">
-                    {{ _('Close') }}
-                </button>
+<div id="previewModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6">
+                <div class="absolute right-0 top-0 pr-4 pt-4">
+                    <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none" onclick="closePreviewModal()">
+                        <span class="sr-only">{{ _('Close') }}</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="previewModalLabel">{{ _('SRT Preview') }}</h3>
+                        <div class="mt-2">
+                            <div class="flex justify-end space-x-2 mb-4">
+                                <button type="button" id="saveButton" onclick="saveSrtContent()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
+                                    <i class="fas fa-save mr-2"></i>
+                                    {{ _('Save Changes') }}
+                                </button>
+                                <button type="button" onclick="downloadSrt()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                    <i class="fas fa-download mr-2"></i>
+                                    {{ _('Download') }}
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <textarea id="srtContent" rows="15" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"></textarea>
+                                <div id="loadingOverlay" class="absolute inset-0 bg-white bg-opacity-80 hidden flex items-center justify-center">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                </div>
+                            </div>
+                            <!-- Enhanced Feedback Message -->
+                            <div id="feedbackMessage" class="mt-4 hidden">
+                                <div class="rounded-md p-4 flex items-center justify-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="closePreviewModal()" class="inline-flex w-full justify-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 sm:ml-3 sm:w-auto transition-all duration-200">
+                        {{ _('Close') }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -231,6 +310,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // File selection handling
 function updateFileName(input) {
@@ -252,31 +332,12 @@ function updateFileName(input) {
     }
 }
 
-// Language selection handling
-document.addEventListener('DOMContentLoaded', function() {
-    const languageDropdown = document.getElementById('target-language');
-    const languageInput = document.querySelector('input[name="target_language"]');
-    
-    if (languageDropdown && languageInput) {
-        languageDropdown.addEventListener('change', function(e) {
-            // Remove error state if present
-            const errorMessage = languageDropdown.closest('.space-y-2').querySelector('.error-message');
-            if (errorMessage) {
-                errorMessage.remove();
-                languageDropdown.closest('.space-y-2').classList.remove('has-error');
-            }
-        });
-    }
-});
-
 // Form validation
 function validateForm() {
     let isValid = true;
     const fileInput = document.querySelector('input[type="file"]');
-    const languageContainer = document.querySelector('#target-language-container');
-    const languageInput = document.querySelector('input[name="target_language"]');
     
-    if (!fileInput || !languageInput) {
+    if (!fileInput) {
         console.error('Required form elements not found');
         return false;
     }
@@ -295,38 +356,12 @@ function validateForm() {
         isValid = false;
     }
     
-    // Validate language
-    if (!languageInput.value || languageInput.value === "None") {
-        if (languageContainer) {
-            // Remove any existing error message first
-            const existingError = languageContainer.querySelector('.error-message');
-            if (existingError) {
-                existingError.remove();
-            }
-            
-            // Add new error message
-            const errorMessage = document.createElement('p');
-            errorMessage.className = 'text-red-500 text-xs mt-1 error-message';
-            errorMessage.textContent = '{{ _("Please select a target language") }}';
-            languageContainer.appendChild(errorMessage);
-            languageContainer.classList.add('has-error');
-        } else {
-            console.error('Language container not found');
-        }
-        isValid = false;
-    }
-    
     return isValid;
 }
 
 // Initialize all form-related functionality
 document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('uploadForm');
-    const languageInput = document.querySelector('input[name="target_language"]');
-
-    // Try to find the dropdown container
-    const languageContainer = document.querySelector('#target-language-container');
-    const _languageInput = languageContainer.querySelector('#target-language-input');
     
     if (!uploadForm) {
         console.error('Upload form not found');
@@ -338,21 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             updateFileName(this);
-        });
-    }
-    
-    // Language selection handling
-    if (languageContainer && _languageInput) {
-        _languageInput.addEventListener('change', function(e) {
-            // Preserve the original case of the language code
-            const value = e.target.value;
-            languageInput.value = value;
-            // Remove error state if present
-            const errorMessage = languageContainer.querySelector('.error-message');
-            if (errorMessage) {
-                errorMessage.remove();
-                languageContainer.classList.remove('has-error');
-            }
         });
     }
     
@@ -511,23 +531,129 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// SRT Preview handling
+let currentFilename = null;
+let originalLanguage = null;
+let previewModal = null;
+
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('Toast container not found');
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? 
+        '<i class="fas fa-check-circle mr-2"></i>' : 
+        '<i class="fas fa-exclamation-circle mr-2"></i>';
+    
+    toast.innerHTML = `
+        <div class="flex items-center">
+            ${icon}
+            <span>${message}</span>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
 function previewSrt(filename) {
+    if (!filename) return;
+    
+    currentFilename = filename;
+    showLoading();
+    
     fetch(`/preview/${filename}`)
-        .then(response => response.text())
-        .then(content => {
-            document.getElementById('srtContent').textContent = content;
-            document.getElementById('srtPreviewModal').classList.remove('hidden');
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.status === 'success') {
+                document.getElementById('srtContent').value = data.content;
+            } else {
+                showToast(data.error || '{{ _("Error loading SRT file") }}', 'error');
+            }
         })
         .catch(error => {
-            console.error('Error loading SRT:', error);
-            alert('{{ _("Error loading SRT preview") }}');
+            hideLoading();
+            showToast('{{ _("Error loading SRT file") }}', 'error');
+            console.error('Error:', error);
         });
 }
 
-function closeSrtPreview() {
-    document.getElementById('srtPreviewModal').classList.add('hidden');
+function downloadSrt() {
+    if (!currentFilename) return;
+    
+    // Get the current content from the textarea
+    const content = document.getElementById('srtContent').value;
+    
+    // Create a blob with the content
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = currentFilename;
+    
+    // Trigger the download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(link.href);
 }
+
+function openPreviewModal(filename) {
+    currentFilename = filename;
+    const modal = document.getElementById('previewModal');
+    modal.classList.remove('hidden');
+    previewSrt(filename);
+}
+
+function closePreviewModal() {
+    const modal = document.getElementById('previewModal');
+    modal.classList.add('hidden');
+}
+
+// Initialize the preview modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('previewModal');
+    if (modal) {
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closePreviewModal();
+            }
+        });
+        
+        // Close modal when pressing Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closePreviewModal();
+            }
+        });
+    }
+});
 
 // Progress polling for processing extractions
 function pollProgress() {
@@ -594,5 +720,92 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function showFeedback(message, type = 'success') {
+    const feedback = document.getElementById('feedbackMessage');
+    const icon = feedback.querySelector('i');
+    const text = feedback.querySelector('p');
+    const container = feedback.querySelector('div');
+    
+    // Reset classes
+    container.className = 'rounded-md p-4 flex items-center justify-center transition-all duration-300';
+    icon.className = 'fas text-xl';
+    
+    if (type === 'success') {
+        container.classList.add('bg-green-50');
+        icon.classList.add('fa-check-circle', 'text-green-400');
+        text.className = 'text-sm font-medium text-green-800';
+    } else {
+        container.classList.add('bg-red-50');
+        icon.classList.add('fa-exclamation-circle', 'text-red-400');
+        text.className = 'text-sm font-medium text-red-800';
+    }
+    
+    text.textContent = message;
+    feedback.classList.remove('hidden');
+    
+    // Add entrance animation
+    feedback.style.opacity = '0';
+    feedback.style.transform = 'translateY(-10px)';
+    feedback.classList.remove('hidden');
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+        feedback.style.transition = 'all 0.3s ease-out';
+        feedback.style.opacity = '1';
+        feedback.style.transform = 'translateY(0)';
+    });
+    
+    // Hide feedback after 3 seconds with fade out animation
+    setTimeout(() => {
+        feedback.style.opacity = '0';
+        feedback.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            feedback.classList.add('hidden');
+        }, 300);
+    }, 3000);
+}
+
+function saveSrtContent() {
+    if (!currentFilename) return;
+    
+    const content = document.getElementById('srtContent').value;
+    const saveButton = document.getElementById('saveButton');
+    const originalButtonText = saveButton.innerHTML;
+    
+    // Show loading state with animation
+    saveButton.disabled = true;
+    saveButton.classList.add('opacity-75', 'cursor-not-allowed');
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ _("Saving...") }}';
+    
+    fetch('/save-srt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            filename: currentFilename,
+            content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFeedback('{{ _("Changes saved successfully!") }}', 'success');
+        } else {
+            showFeedback(data.message || '{{ _("Failed to save changes") }}', 'error');
+        }
+    })
+    .catch(error => {
+        showFeedback('{{ _("Failed to save changes") }}', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        // Restore button state with animation
+        saveButton.disabled = false;
+        saveButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        saveButton.innerHTML = originalButtonText;
+    });
+}
 </script>
 {% endblock %} 

@@ -42,32 +42,35 @@ class SubtitleExtractor:
             logger.error(f"Error saving file: {str(e)}")
             raise
 
-    def extract_subtitles(self, file_path, target_language, extraction_id):
-        logger.info(f"Starting subtitle extraction for {file_path} in {target_language}")
+    def extract_subtitles(self, file_path, extraction_id):
+        logger.info(f"Starting subtitle extraction for {file_path}")
         try:
             # Update progress to 15% - Starting transcription
             extraction = SubtitleExtraction.query.get(extraction_id)
+            if not extraction:
+                raise Exception(f"Extraction {extraction_id} not found")
+            
+            extraction.status = 'processing'
             extraction.progress = 15
             db.session.commit()
-
-            # Handle language code for Whisper
-            whisper_lang = target_language.split('-')[0]  # Convert 'pt-BR' to 'pt' for Whisper
-            logger.info(f"Using Whisper language code: {whisper_lang}")
 
             # Update progress to 20% - Model loaded and ready
             extraction.progress = 20
             db.session.commit()
 
-            # Transcribe the audio
+            # Transcribe the audio - let Whisper detect the language automatically
             logger.info("Starting transcription...")
             result = self.model.transcribe(
                 file_path,
-                language=whisper_lang,
-                task="transcribe",  # Always use transcribe to keep original language
+                task="transcribe",  # Use transcribe to keep original language
                 verbose=True,
                 word_timestamps=True
             )
             logger.info("Transcription completed successfully")
+            
+            # Get detected language from result
+            detected_language = result.get('language', 'unknown')
+            logger.info(f"Detected language: {detected_language}")
 
             # Update progress to 60% - Transcription complete
             extraction.progress = 60
@@ -97,10 +100,16 @@ class SubtitleExtractor:
             db.session.commit()
 
             logger.info("SRT file generated successfully")
-            return srt_filename
+            return srt_filename, detected_language
 
         except Exception as e:
             logger.error(f"Error in extract_subtitles: {str(e)}")
+            # Update extraction status to failed
+            extraction = SubtitleExtraction.query.get(extraction_id)
+            if extraction:
+                extraction.status = 'failed'
+                extraction.error_message = str(e)
+                db.session.commit()
             raise Exception(f"Error extracting subtitles: {str(e)}")
 
     def _format_timestamp(self, seconds):
@@ -125,9 +134,9 @@ class SubtitleExtractor:
 
             file_path = os.path.join(self.upload_folder, extraction.original_filename)
             logger.info(f"Processing file: {file_path}")
-            srt_filename = self.extract_subtitles(file_path, extraction.target_language, extraction_id)
+            srt_filename, detected_language = self.extract_subtitles(file_path, extraction_id)
 
-            logger.info(f"Extraction completed successfully. SRT file: {srt_filename}")
+            logger.info(f"Extraction completed successfully. SRT file: {srt_filename}, Detected language: {detected_language}")
             extraction.srt_filename = srt_filename
             extraction.status = 'completed'
             extraction.progress = 100
