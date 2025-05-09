@@ -266,4 +266,88 @@ msgid "Next page"
 msgstr "Página siguiente"
 
 msgid "Last page"
-msgstr "Última página" 
+msgstr "Última página"
+
+msgid "Credit Balance"
+msgstr "Saldo de Créditos"
+
+msgid "Credits"
+msgstr "Créditos"
+
+msgid "Insufficient credits! You have {} credits, but need {} credits for this video. Please add more credits to continue."
+msgstr "¡Créditos insuficientes! Tienes {} créditos, pero necesitas {} créditos para este video. Por favor, añade más créditos para continuar."
+
+msgid "Add Credits"
+msgstr "Añadir Créditos"
+
+msgid "Error processing video file. Please try again."
+msgstr "Error al procesar el archivo de video. Por favor, inténtalo de nuevo."
+
+msgid "Error loading SRT file"
+msgstr "Error al cargar el archivo SRT"
+
+msgid "Error saving SRT file"
+msgstr "Error al guardar el archivo SRT"
+
+msgid "Error updating SRT preview"
+msgstr "Error al actualizar la vista previa del SRT"
+
+msgid "Unsupported target language: {}"
+msgstr "Idioma de destino no soportado: {}"
+
+msgid "Original file not found"
+msgstr "Archivo original no encontrado"
+
+msgid "Changes saved successfully!"
+msgstr "¡Cambios guardados exitosamente!"
+
+msgid "Failed to save changes"
+msgstr "Error al guardar los cambios"
+
+msgid "Refresh"
+msgstr "Actualizar"
+
+msgid "Items per page"
+msgstr "Elementos por página"
+
+msgid "First page"
+msgstr "Primera página"
+
+msgid "Previous page"
+msgstr "Página anterior"
+
+msgid "Next page"
+msgstr "Página siguiente"
+
+msgid "Last page"
+msgstr "Última página"
+
+msgid "Current Balance"
+msgstr "Saldo Actual"
+
+msgid "Amount of Credits"
+msgstr "Cantidad de Créditos"
+
+msgid "credits"
+msgstr "créditos"
+
+msgid "1 credit = 1 minute of video processing"
+msgstr "1 crédito = 1 minuto de procesamiento de video"
+
+msgid "Purchase credits to extract subtitles from your videos"
+msgstr "Compra créditos para extraer subtítulos de tus videos"
+
+msgid "Please enter a valid amount of credits."
+msgstr "Por favor, ingresa una cantidad válida de créditos."
+
+msgid "Credits added successfully!"
+msgstr "¡Créditos añadidos exitosamente!"
+
+msgid "Please enter a valid number."
+msgstr "Por favor, ingresa un número válido."
+
+msgid "An error occurred while adding credits. Please try again."
+msgstr "Ocurrió un error al añadir créditos. Por favor, inténtalo de nuevo."
+
+msgid "Back to Dashboard"
+msgstr "Volver al Panel" 

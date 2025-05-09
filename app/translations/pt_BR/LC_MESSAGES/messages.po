@@ -410,4 +410,118 @@ msgid "Next page"
 msgstr "Próxima página"
 
 msgid "Last page"
-msgstr "Última página" 
+msgstr "Última página"
+
+msgid "Credit Balance"
+msgstr "Saldo de Créditos"
+
+msgid "Credits"
+msgstr "Créditos"
+
+msgid "Insufficient credits! You have {} credits, but need {} credits for this video. Please add more credits to continue."
+msgstr "Créditos insuficientes! Você tem {} créditos, mas precisa de {} créditos para este vídeo. Por favor, adicione mais créditos para continuar."
+
+msgid "Add Credits"
+msgstr "Adicionar Créditos"
+
+msgid "Error processing video file. Please try again."
+msgstr "Erro ao processar o arquivo de vídeo. Por favor, tente novamente."
+
+msgid "File uploaded successfully. Extraction started."
+msgstr "Arquivo enviado com sucesso. A extração foi iniciada."
+
+msgid "Upload failed. Please try again."
+msgstr "Falha no envio. Por favor, tente novamente."
+
+msgid "Network error. Please try again."
+msgstr "Erro de rede. Por favor, tente novamente."
+
+msgid "Processing..."
+msgstr "Processando..."
+
+msgid "Starting..."
+msgstr "Iniciando..."
+
+msgid "Almost done..."
+msgstr "Quase terminado..."
+
+msgid "Preparing subtitles..."
+msgstr "Preparando legendas..."
+
+msgid "Uploading..."
+msgstr "Enviando..."
+
+msgid "Upload complete"
+msgstr "Upload concluído"
+
+msgid "Upload failed"
+msgstr "Falha no upload"
+
+msgid "Error loading SRT file"
+msgstr "Erro ao carregar arquivo SRT"
+
+msgid "Error saving SRT file"
+msgstr "Erro ao salvar arquivo SRT"
+
+msgid "Error updating SRT preview"
+msgstr "Erro ao atualizar visualização do SRT"
+
+msgid "Unsupported target language: {}"
+msgstr "Idioma de destino não suportado: {}"
+
+msgid "Original file not found"
+msgstr "Arquivo original não encontrado"
+
+msgid "Changes saved successfully!"
+msgstr "Alterações salvas com sucesso!"
+
+msgid "Failed to save changes"
+msgstr "Falha ao salvar alterações"
+
+msgid "Refresh"
+msgstr "Atualizar"
+
+msgid "Items per page"
+msgstr "Itens por página"
+
+msgid "First page"
+msgstr "Primeira página"
+
+msgid "Previous page"
+msgstr "Página anterior"
+
+msgid "Next page"
+msgstr "Próxima página"
+
+msgid "Last page"
+msgstr "Última página"
+
+msgid "Current Balance"
+msgstr "Saldo Atual"
+
+msgid "Amount of Credits"
+msgstr "Quantidade de Créditos"
+
+msgid "credits"
+msgstr "créditos"
+
+msgid "1 credit = 1 minute of video processing"
+msgstr "1 crédito = 1 minuto de processamento de vídeo"
+
+msgid "Purchase credits to extract subtitles from your videos"
+msgstr "Compre créditos para extrair legendas dos seus vídeos"
+
+msgid "Please enter a valid amount of credits."
+msgstr "Por favor, insira uma quantidade válida de créditos."
+
+msgid "Credits added successfully!"
+msgstr "Créditos adicionados com sucesso!"
+
+msgid "Please enter a valid number."
+msgstr "Por favor, insira um número válido."
+
+msgid "An error occurred while adding credits. Please try again."
+msgstr "Ocorreu um erro ao adicionar créditos. Por favor, tente novamente."
+
+msgid "Back to Dashboard"
+msgstr "Voltar ao Painel" 

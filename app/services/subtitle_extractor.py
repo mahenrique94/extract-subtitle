@@ -138,6 +138,7 @@ class SubtitleExtractor:
 
             logger.info(f"Extraction completed successfully. SRT file: {srt_filename}, Detected language: {detected_language}")
             extraction.srt_filename = srt_filename
+            extraction.target_language = detected_language
             extraction.status = 'completed'
             extraction.progress = 100
             extraction.completed_at = datetime.utcnow()
@@ -147,4 +148,32 @@ class SubtitleExtractor:
             logger.error(f"Error processing extraction {extraction_id}: {str(e)}")
             extraction.status = 'failed'
             extraction.error_message = str(e)
-            db.session.commit() 
+            db.session.commit()
+
+    def get_video_duration(self, video_path):
+        """Get the duration of a video file in seconds."""
+        try:
+            import subprocess
+            import json
+            
+            # Use ffprobe to get video duration
+            cmd = [
+                'ffprobe',
+                '-v', 'quiet',
+                '-print_format', 'json',
+                '-show_format',
+                video_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                duration = float(data['format']['duration'])
+                return duration
+            else:
+                logger.error(f"Error getting video duration: {result.stderr}")
+                return 60  # Default to 1 minute if we can't get the duration
+                
+        except Exception as e:
+            logger.error(f"Error getting video duration: {str(e)}")
+            return 60  # Default to 1 minute if we can't get the duration 

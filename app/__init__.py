@@ -7,7 +7,7 @@ import os
 import logging
 from app.babel import configure_babel
 from flask_migrate import Migrate
-from flask_babel import _
+from flask_babel import _, format_datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -51,6 +51,11 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = _('Please log in to access this page.')
     login_manager.login_message_category = 'info'
+    
+    # Add format_datetime to template context
+    @app.context_processor
+    def inject_format_datetime():
+        return dict(format_datetime=format_datetime)
     
     # Register blueprints
     from app.auth import auth as auth_blueprint

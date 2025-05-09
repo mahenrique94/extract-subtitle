@@ -1,5 +1,5 @@
 from flask import request, session, g
-from flask_babel import Babel
+from flask_babel import Babel, format_datetime
 from app.config.languages import SUPPORTED_LANGUAGES
 import logging
 
@@ -28,6 +28,9 @@ def get_locale():
 
 def configure_babel(app):
     babel.init_app(app, locale_selector=get_locale)
+    
+    # Add format_datetime filter
+    app.jinja_env.filters['format_datetime'] = format_datetime
     
     @app.before_request
     def before_request():

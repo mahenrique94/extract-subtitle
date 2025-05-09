@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto pb-12">
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ url_for('main.index') }}" class="text-gray-700 hover:text-indigo-600 inline-flex items-center">
+                    <i class="fas fa-home mr-2"></i>
+                    {{ _('Home') }}
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ url_for('main.dashboard') }}" class="text-gray-700 hover:text-indigo-600">{{ _('Dashboard') }}</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="text-gray-500">{{ _('Add Credits') }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center mb-6">
+            <div class="flex-shrink-0">
+                <i class="fas fa-coins text-3xl text-indigo-600"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-xl font-semibold text-gray-900">{{ _('Add Credits') }}</h2>
+                <p class="text-sm text-gray-500">{{ _('Purchase credits to extract subtitles from your videos') }}</p>
+            </div>
+        </div>
+
+        <!-- Credit Balance -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Credit Balance') }}</h2>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-coins text-indigo-600 text-2xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">{{ _('Credits') }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ credit_balance|default(0.0) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit Purchase Form -->
+        <form method="POST" class="space-y-6">
+            <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700">{{ _('Amount of Credits') }}</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input type="number" 
+                           name="amount" 
+                           id="amount" 
+                           min="1" 
+                           step="1" 
+                           required
+                           class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                           placeholder="Enter amount">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">{{ _('credits') }}</span>
+                    </div>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">{{ _('1 credit = 1 minute of video processing') }}</p>
+            </div>
+
+            <!-- Quick Select Buttons -->
+            <div class="grid grid-cols-3 gap-4">
+                <button type="button" 
+                        onclick="setAmount(10)" 
+                        class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    10 {{ _('credits') }}
+                </button>
+                <button type="button" 
+                        onclick="setAmount(50)" 
+                        class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    50 {{ _('credits') }}
+                </button>
+                <button type="button" 
+                        onclick="setAmount(100)" 
+                        class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    100 {{ _('credits') }}
+                </button>
+            </div>
+
+            <div class="pt-4 flex flex-col gap-4">
+                <button type="submit" 
+                class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                {{ _('Add Credits') }}
+            </button>
+            <a href="{{ url_for('main.dashboard') }}" 
+               class="w-full flex justify-center items-center px-4 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {{ _('Back to Dashboard') }}
+            </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setAmount(amount) {
+    document.getElementById('amount').value = amount;
+}
+</script>
+{% endblock %} 

@@ -61,6 +61,14 @@
         opacity: 0;
     }
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
 </style>
 {% endblock %}
 
@@ -86,6 +94,23 @@
         </ol>
     </nav>
     
+    <!-- Credit Balance -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Credit Balance') }}</h2>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-coins text-indigo-600 text-2xl mr-3"></i>
+                <div>
+                    <p class="text-sm text-gray-600">{{ _('Credits') }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ (current_user.credit_balance or 0.0)|round(1) }}</p>
+                </div>
+            </div>
+            <a href="{{ url_for('main.add_credits') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                {{ _('Add Credits') }}
+            </a>
+        </div>
+    </div>
+    
     <!-- Upload Media Form -->
     <div class="bg-white rounded-lg shadow-lg p-8 mb-8 border border-gray-100">
         <div class="flex items-center mb-6">
@@ -98,7 +123,7 @@
             </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
+        <form method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6" novalidate>
             {{ form.hidden_tag() }}
             
             <!-- File Upload Field -->
@@ -122,11 +147,7 @@
                     </div>
                     {{ form.file(class="sr-only", onchange="updateFileName(this)") }}
                 </label>
-                {% if form.file.errors %}
-                    {% for error in form.file.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
+                <div id="fileError" class="text-red-500 text-xs mt-1 hidden"></div>
             </div>
 
             <!-- Submit Button -->
@@ -249,7 +270,7 @@
                                     </div>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.created_at|format_datetime }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 {% if extraction.status == 'completed' %}
                                     <button type="button" 
@@ -410,14 +431,15 @@ function updateFileName(input) {
     const uploadArea = document.getElementById('uploadArea');
     const selectedFile = document.getElementById('selectedFile');
     const selectedFileName = document.getElementById('selectedFileName');
+    const fileError = document.getElementById('fileError');
     
     if (input.files && input.files[0]) {
         uploadArea.classList.add('hidden');
         selectedFile.classList.remove('hidden');
         selectedFileName.textContent = input.files[0].name;
-        // Remove error state if present
-        input.closest('.space-y-2').querySelector('.error-message')?.remove();
-        input.closest('.space-y-2').classList.remove('has-error');
+        // Hide error message if present
+        fileError.classList.add('hidden');
+        fileError.textContent = '';
     } else {
         uploadArea.classList.remove('hidden');
         selectedFile.classList.add('hidden');
@@ -429,23 +451,21 @@ function updateFileName(input) {
 function validateForm() {
     let isValid = true;
     const fileInput = document.querySelector('input[type="file"]');
+    const fileError = document.getElementById('fileError');
     
     if (!fileInput) {
         console.error('Required form elements not found');
         return false;
     }
     
+    // Reset error state
+    fileError.classList.add('hidden');
+    fileError.textContent = '';
+    
     // Validate file
     if (!fileInput.files || !fileInput.files[0]) {
-        const fileContainer = fileInput.closest('.space-y-2');
-        
-        if (fileContainer && !fileContainer.querySelector('.error-message')) {
-            const errorMessage = document.createElement('p');
-            errorMessage.className = 'text-red-500 text-xs mt-1 error-message';
-            errorMessage.textContent = '{{ _("Please select a file to upload") }}';
-            fileContainer.appendChild(errorMessage);
-            fileContainer.classList.add('has-error');
-        }
+        fileError.textContent = '{{ _("Please select a file to upload") }}';
+        fileError.classList.remove('hidden');
         isValid = false;
     }
     
@@ -583,6 +603,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         xhr.addEventListener('load', function() {
             if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.error) {
+                    showError(response.error);
+                    return;
+                }
                 // Show spinner and update status
                 document.getElementById('processingSpinner').classList.remove('hidden');
                 document.querySelector('.text-xs.font-semibold').textContent = '{{ _("Processing...") }}';
@@ -593,22 +618,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.reload();
                 }, 1000);
             } else {
-                progressText.textContent = '{{ _("Upload failed") }}';
-                console.error('Upload failed:', xhr.responseText);
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'mt-2 text-red-500 text-sm';
-                errorDiv.textContent = xhr.responseText || '{{ _("Upload failed. Please try again.") }}';
-                progressDiv.appendChild(errorDiv);
+                showError("{{ _('Upload failed. Please try again.') }}");
             }
         });
         
         xhr.addEventListener('error', function() {
-            progressText.textContent = '{{ _("Upload failed") }}';
-            console.error('Upload failed:', xhr.statusText);
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'mt-2 text-red-500 text-sm';
-            errorDiv.textContent = '{{ _("Network error. Please try again.") }}';
-            progressDiv.appendChild(errorDiv);
+            showError("{{ _('Network error. Please try again.') }}");
         });
         
         // Add CSRF token to headers
@@ -636,40 +651,6 @@ function hideLoading() {
     document.getElementById('loadingOverlay').classList.add('hidden');
 }
 
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) {
-        console.error('Toast container not found');
-        return;
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const icon = type === 'success' ? 
-        '<i class="fas fa-check-circle mr-2"></i>' : 
-        '<i class="fas fa-exclamation-circle mr-2"></i>';
-    
-    toast.innerHTML = `
-        <div class="flex items-center">
-            ${icon}
-            <span>${message}</span>
-        </div>
-    `;
-    
-    container.appendChild(toast);
-    
-    // Remove toast after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-out forwards';
-        setTimeout(() => {
-            if (container.contains(toast)) {
-                container.removeChild(toast);
-            }
-        }, 300);
-    }, 3000);
-}
-
 function previewSrt(filename, language) {
     if (!filename) return;
     
@@ -695,13 +676,10 @@ function previewSrt(filename, language) {
                         }
                     });
                 }
-            } else {
-                showToast(data.error || '{{ _("Error loading SRT file") }}', 'error');
             }
         })
         .catch(error => {
             hideLoading();
-            showToast('{{ _("Error loading SRT file") }}', 'error');
             console.error('Error:', error);
         });
 }
@@ -897,6 +875,45 @@ function goToPage(page) {
     const url = new URL(window.location.href);
     url.searchParams.set('page', page);
     window.location.href = url.toString();
+}
+
+function resetUploadForm() {
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    // Reset progress section
+    const progressDiv = document.getElementById('uploadProgress');
+    if (progressDiv) {
+        progressDiv.classList.add('hidden');
+        // Clear any existing error messages
+        const errorMessages = progressDiv.querySelectorAll('.text-red-500');
+        errorMessages.forEach(msg => msg.remove());
+    }
+    
+    // Reset progress bar and text
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = '0%';
+    
+    // Reset file selection display
+    const uploadArea = document.getElementById('uploadArea');
+    const selectedFile = document.getElementById('selectedFile');
+    if (uploadArea && selectedFile) {
+        uploadArea.classList.remove('hidden');
+        selectedFile.classList.add('hidden');
+    }
+}
+
+function showError(message) {
+    const progressDiv = document.getElementById('uploadProgress');
+    if (progressDiv) {
+        progressDiv.classList.add('hidden');
+    }
+    window.location.reload();
 }
 </script>
 {% endblock %} 

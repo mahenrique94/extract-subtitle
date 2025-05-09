@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    credit_balance = db.Column(db.Float, default=0.0)  # Credit balance in minutes
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     extractions = db.relationship('SubtitleExtraction', backref='user', lazy=True)
     
@@ -21,6 +22,17 @@ class User(UserMixin, db.Model):
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+        
+    def has_sufficient_credits(self, duration_minutes):
+        """Check if user has enough credits for the given duration."""
+        return self.credit_balance >= duration_minutes
+        
+    def deduct_credits(self, duration_minutes):
+        """Deduct credits for the given duration."""
+        if self.has_sufficient_credits(duration_minutes):
+            self.credit_balance -= duration_minutes
+            return True
+        return False
 
 class SubtitleExtraction(db.Model):
     id = db.Column(db.Integer, primary_key=True)

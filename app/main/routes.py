@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, send_from_directory, current_app, flash, redirect, url_for, jsonify, session
+from flask import Blueprint, render_template, request, send_from_directory, current_app, flash, redirect, url_for, jsonify, session, get_flashed_messages
 from flask_login import login_required, current_user
 import os
 import logging
@@ -8,7 +8,7 @@ from app.services.subtitle_extractor import SubtitleExtractor
 from app import db
 import threading
 from app import create_app
-from flask_babel import _
+from flask_babel import _, format_datetime
 from app.config.languages import SUPPORTED_LANGUAGES
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -39,6 +39,15 @@ def dashboard():
     logger.debug('Accessing dashboard route')
     form = UploadForm()
     
+    # Get pagination parameters with defaults
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Get user's extractions with pagination
+    extractions = SubtitleExtraction.query.filter_by(user_id=current_user.id)\
+        .order_by(SubtitleExtraction.created_at.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    
     # Get available languages for the dropdown
     language_options = [
         {'value': 'en', 'label': _('English')},
@@ -60,103 +69,83 @@ def dashboard():
             # Initialize subtitle extractor
             extractor = SubtitleExtractor(current_app.config['UPLOAD_FOLDER'])
             
-            # Create extraction record first
-            extraction = SubtitleExtraction(
-                user_id=current_user.id,
-                original_filename='',  # Will be set after saving
-                srt_filename='',  # Will be set after processing
-                target_language='unknown',  # Will be updated with detected language
-                status='pending'
-            )
-            db.session.add(extraction)
-            db.session.commit()
-            extraction_id = extraction.id
+            # Get video duration and check credits
+            video_path = os.path.join(current_app.config['UPLOAD_FOLDER'], secure_filename(form.file.data.filename))
+            duration_seconds = extractor.get_video_duration(video_path)  # Already in seconds
             
-            # Save the uploaded file
+            # Calculate required credits (1 credit per minute)
+            required_credits = (duration_seconds / 60) + 1  # Round up to nearest minute
+            
+            # Get user's credit balance
+            credit_balance = current_user.credit_balance or 0.0
+            
+            logger.info(f"Video duration: {duration_seconds} seconds, Required credits: {required_credits}, User balance: {credit_balance}")
+            
+            if credit_balance < required_credits:
+                error_message = _('Insufficient credits! You have {} credits, but need {} credits for this video. Please add more credits to continue.').format(
+                    credit_balance,
+                    required_credits
+                )
+                flash(error_message, 'error')
+                return jsonify({'error': error_message})
+            
+            # Process the file
             filename = secure_filename(form.file.data.filename)
             file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             form.file.data.save(file_path)
             
-            # Update extraction record with filename
-            extraction.original_filename = filename
+            # Deduct credits from user's balance
+            current_user.credit_balance = credit_balance - required_credits
             db.session.commit()
             
-            # Start processing in background
-            def process_extraction():
-                app = create_app()
-                with app.app_context():
-                    try:
-                        # Get the extraction record
-                        extraction = SubtitleExtraction.query.get(extraction_id)
-                        if not extraction:
-                            logger.error(f"Extraction record not found: {extraction_id}")
-                            return
-                        
-                        # Update status to processing
-                        extraction.status = 'processing'
-                        extraction.progress = 0
-                        db.session.commit()
-                        
-                        # Extract subtitles using original audio language
-                        srt_filename, detected_language = extractor.extract_subtitles(file_path, extraction_id)
-                        
-                        # Update extraction record
-                        extraction.srt_filename = srt_filename
-                        extraction.target_language = detected_language  # Store the detected language
-                        extraction.status = 'completed'
-                        extraction.progress = 100
-                        extraction.completed_at = datetime.utcnow()
-                        db.session.commit()
-                        
-                        logger.info(f"Extraction completed successfully: {extraction_id}")
-                    except Exception as e:
-                        logger.error(f"Error processing extraction {extraction_id}: {str(e)}")
-                        try:
-                            extraction = SubtitleExtraction.query.get(extraction_id)
-                            if extraction:
-                                extraction.status = 'failed'
-                                extraction.error_message = str(e)
-                                db.session.commit()
-                        except Exception as inner_e:
-                            logger.error(f"Error updating failed status: {str(inner_e)}")
+            # Create extraction record
+            extraction = SubtitleExtraction(
+                user_id=current_user.id,
+                original_filename=filename,
+                target_language='unknown',
+                status='pending'
+            )
+            db.session.add(extraction)
+            db.session.commit()
             
             # Start background processing
-            thread = Thread(target=process_extraction)
-            thread.daemon = True
+            def process_file(extraction_id):
+                with create_app().app_context():
+                    try:
+                        # Get a fresh reference to the extraction object
+                        extraction = SubtitleExtraction.query.get(extraction_id)
+                        extractor = SubtitleExtractor(current_app.config['UPLOAD_FOLDER'])
+                        extractor.process_extraction(extraction_id)
+                    except Exception as e:
+                        logger.error(f"Error processing file: {str(e)}")
+                        # Get a fresh reference to update the status
+                        extraction = SubtitleExtraction.query.get(extraction_id)
+                        extraction.status = 'failed'
+                        db.session.commit()
+            
+            thread = Thread(target=process_file, args=(extraction.id,))
             thread.start()
             
             flash(_('File uploaded successfully. Extraction started.'), 'success')
-            return redirect(url_for('main.dashboard'))
+            return jsonify({'success': True})
             
         except Exception as e:
-            logger.error(f"Error in upload route: {str(e)}")
-            flash(_('An error occurred while processing your file.'), 'error')
-            return redirect(url_for('main.dashboard'))
-    
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(f"{getattr(form, field).label.text}: {error}", 'error')
-    
-    # Get pagination parameters
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    
-    # Get user's extractions with pagination
-    pagination = SubtitleExtraction.query.filter_by(user_id=current_user.id)\
-        .order_by(SubtitleExtraction.created_at.desc())\
-        .paginate(page=page, per_page=per_page, error_out=False)
-    
-    extractions = pagination.items
+            logger.error(f"Error processing upload: {str(e)}")
+            error_message = _('Error processing video file. Please try again.')
+            flash(error_message, 'error')
+            return jsonify({'error': error_message})
     
     return render_template('main/dashboard.html', 
                          title=_('Dashboard'),
                          form=form,
-                         extractions=extractions,
                          language_options=language_options,
-                         current_language=session.get('language', 'en'),
+                         credit_balance=current_user.credit_balance or 0.0,
+                         extractions=extractions.items,
                          page=page,
                          per_page=per_page,
-                         total_pages=pagination.pages)
+                         total_pages=extractions.pages,
+                         has_next=extractions.has_next,
+                         has_prev=extractions.has_prev)
 
 @main.route('/download/<filename>')
 @login_required
@@ -292,4 +281,36 @@ def save_srt():
 
     except Exception as e:
         logger.error(f"Error saving SRT file: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500 
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/add-credits', methods=['GET', 'POST'])
+@login_required
+def add_credits():
+    """Handle credit purchase page and processing."""
+    if request.method == 'POST':
+        try:
+            # Get the amount of credits to add from the form
+            amount = float(request.form.get('amount', 0))
+            
+            if amount <= 0:
+                flash(_('Please enter a valid amount of credits.'), 'error')
+                return redirect(url_for('main.add_credits'))
+            
+            # Update user's credit balance
+            current_user.credit_balance = (current_user.credit_balance or 0.0) + amount
+            db.session.commit()
+            
+            flash(_('Credits added successfully!'), 'success')
+            return redirect(url_for('main.dashboard'))
+            
+        except ValueError:
+            flash(_('Please enter a valid number.'), 'error')
+            return redirect(url_for('main.add_credits'))
+        except Exception as e:
+            logger.error(f"Error adding credits: {str(e)}")
+            flash(_('An error occurred while adding credits. Please try again.'), 'error')
+            return redirect(url_for('main.add_credits'))
+    
+    return render_template('main/add_credits.html', 
+                         title=_('Add Credits'),
+                         credit_balance=current_user.credit_balance or 0.0) 
