@@ -225,4 +225,7 @@ msgid "Changes saved successfully!"
 msgstr "Changes saved successfully!"
 
 msgid "Failed to save changes"
-msgstr "Failed to save changes" 
+msgstr "Failed to save changes"
+
+msgid "Refresh"
+msgstr "Refresh" 

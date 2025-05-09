@@ -172,14 +172,20 @@
 
     <!-- Recent Extractions -->
     <div class="bg-white rounded-lg shadow-lg p-8 border border-gray-100">
-        <div class="flex items-center mb-6">
-            <div class="flex-shrink-0">
-                <i class="fas fa-history text-3xl text-indigo-600"></i>
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-history text-3xl text-indigo-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-semibold text-gray-900">{{ _('Recent Extractions') }}</h2>
+                    <p class="text-sm text-gray-500">{{ _('Your recent subtitle extractions') }}</p>
+                </div>
             </div>
-            <div class="ml-4">
-                <h2 class="text-xl font-semibold text-gray-900">{{ _('Recent Extractions') }}</h2>
-                <p class="text-sm text-gray-500">{{ _('Your recent subtitle extractions') }}</p>
-            </div>
+            <button onclick="window.location.reload()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-600 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                <i class="fas fa-sync-alt mr-2"></i>
+                {{ _('Refresh') }}
+            </button>
         </div>
 
         {% if extractions %}
@@ -199,7 +205,19 @@
                         {% for extraction in extractions %}
                         <tr class="hover:bg-gray-50" data-extraction-id="{{ extraction.id }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ extraction.original_filename }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.target_language }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if extraction.target_language == 'unknown' or not extraction.target_language %}
+                                    <div class="flex items-center justify-center">
+                                        <svg class="animate-spin h-4 w-4 text-indigo-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span class="text-indigo-600">{{ _('Processing') }}</span>
+                                    </div>
+                                {% else %}
+                                    {{ extraction.target_language }}
+                                {% endif %}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     {% if extraction.status == 'completed' %}bg-green-100 text-green-800
@@ -209,18 +227,26 @@
                                     {{ _(extraction.status) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center justify-center">
                                 {% if extraction.status == 'processing' %}
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                        <div class="bg-indigo-600 h-2.5 rounded-full progress-bar-fill" 
-                                             style="--progress: {{ extraction.progress }}%"></div>
+                                    <div class="flex items-center justify-center w-full">
+                                        <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
                                     </div>
                                 {% elif extraction.status == 'completed' %}
-                                    {{ _('Completed') }}
+                                    <div class="flex items-center justify-center w-full">
+                                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                                    </div>
                                 {% elif extraction.status == 'failed' %}
-                                    {{ _('Failed') }}
+                                    <div class="flex items-center justify-center w-full">
+                                        <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+                                    </div>
                                 {% else %}
-                                    {{ _('Pending') }}
+                                    <div class="flex items-center justify-center w-full">
+                                        <i class="fas fa-clock text-gray-400 text-xl"></i>
+                                    </div>
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ extraction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
@@ -653,72 +679,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
-
-// Progress polling for processing extractions
-function pollProgress() {
-    fetch('/extraction-progress')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(extraction => {
-                const progressBar = document.querySelector(`[data-extraction-id="${extraction.id}"] .progress-bar`);
-                const progressText = document.querySelector(`[data-extraction-id="${extraction.id}"] .progress-text`);
-                if (progressBar && progressText) {
-                    // Apply easing to make it slow down as it approaches 95%
-                    const maxProgress = 95;
-                    const easedProgress = maxProgress * (1 - Math.pow(1 - (extraction.progress / 100), 3));
-                    
-                    progressBar.style.width = `${easedProgress}%`;
-                    progressText.textContent = `${Math.round(easedProgress)}%`;
-                    
-                    // Update status text based on progress
-                    const statusText = document.querySelector(`[data-extraction-id="${extraction.id}"] .status-text`);
-                    if (statusText) {
-                        if (extraction.progress < 5) {
-                            statusText.textContent = '{{ _("Initializing...") }}';
-                        } else if (extraction.progress < 15) {
-                            statusText.textContent = '{{ _("Saving file...") }}';
-                        } else if (extraction.progress < 20) {
-                            statusText.textContent = '{{ _("Loading model...") }}';
-                        } else if (extraction.progress < 60) {
-                            statusText.textContent = '{{ _("Transcribing...") }}';
-                        } else if (extraction.progress < 95) {
-                            statusText.textContent = '{{ _("Generating subtitles...") }}';
-                        } else {
-                            statusText.textContent = '{{ _("Finalizing...") }}';
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => console.error('Error polling progress:', error));
-}
-
-// Poll progress every 2 seconds if there are processing extractions
-if (document.querySelector('[data-status="processing"]')) {
-    setInterval(pollProgress, 2000);
-}
-
-// Update the extraction table row to include data attributes
-document.addEventListener('DOMContentLoaded', function() {
-    const extractionRows = document.querySelectorAll('tr[data-extraction-id]');
-    extractionRows.forEach(row => {
-        const progressCell = row.querySelector('td:nth-child(4)');
-        if (progressCell) {
-            const progressBar = progressCell.querySelector('.bg-indigo-600');
-            if (progressBar) {
-                const progressText = document.createElement('span');
-                progressText.className = 'progress-text ml-2 text-xs text-gray-500';
-                progressText.textContent = '0%';
-                progressBar.parentNode.appendChild(progressText);
-                
-                const statusText = document.createElement('span');
-                statusText.className = 'status-text block text-xs text-gray-500 mt-1';
-                statusText.textContent = '{{ _("Initializing...") }}';
-                progressCell.appendChild(statusText);
-            }
-        }
-    });
 });
 
 function showFeedback(message, type = 'success') {

@@ -392,4 +392,7 @@ msgid "Changes saved successfully!"
 msgstr "Alterações salvas com sucesso!"
 
 msgid "Failed to save changes"
-msgstr "Falha ao salvar alterações" 
+msgstr "Falha ao salvar alterações"
+
+msgid "Refresh"
+msgstr "Atualizar" 
