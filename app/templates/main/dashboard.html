@@ -382,6 +382,10 @@
                                     ) }}
                                 </div>
                                 <div class="flex space-x-2">
+                                    <button type="button" onclick="focusSrtContent()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200">
+                                        <i class="fas fa-edit mr-2"></i>
+                                        {{ _('Edit Content') }}
+                                    </button>
                                     <button type="button" id="saveButton" onclick="saveSrtContent()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
                                         <i class="fas fa-save mr-2"></i>
                                         {{ _('Save Changes') }}
@@ -393,7 +397,7 @@
                                 </div>
                             </div>
                             <div class="relative">
-                                <textarea id="srtContent" rows="15" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"></textarea>
+                                <textarea id="srtContent" rows="15" class="block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono bg-gray-50 p-4 resize-none" style="line-height: 1.5; tab-size: 4; background-color: #f8fafc;"></textarea>
                                 <div id="loadingOverlay" class="absolute inset-0 bg-white bg-opacity-80 hidden flex items-center justify-center">
                                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                                 </div>
@@ -914,6 +918,13 @@ function showError(message) {
         progressDiv.classList.add('hidden');
     }
     window.location.reload();
+}
+
+function focusSrtContent() {
+    const srtContent = document.getElementById('srtContent');
+    if (srtContent) {
+        srtContent.focus();
+    }
 }
 </script>
 {% endblock %} 
