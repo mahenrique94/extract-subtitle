@@ -137,15 +137,26 @@ def dashboard():
         for error in errors:
             flash(f"{getattr(form, field).label.text}: {error}", 'error')
     
-    # Get user's extractions
-    extractions = SubtitleExtraction.query.filter_by(user_id=current_user.id).order_by(SubtitleExtraction.created_at.desc()).all()
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Get user's extractions with pagination
+    pagination = SubtitleExtraction.query.filter_by(user_id=current_user.id)\
+        .order_by(SubtitleExtraction.created_at.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    
+    extractions = pagination.items
     
     return render_template('main/dashboard.html', 
                          title=_('Dashboard'),
                          form=form,
                          extractions=extractions,
                          language_options=language_options,
-                         current_language=session.get('language', 'en'))
+                         current_language=session.get('language', 'en'),
+                         page=page,
+                         per_page=per_page,
+                         total_pages=pagination.pages)
 
 @main.route('/download/<filename>')
 @login_required

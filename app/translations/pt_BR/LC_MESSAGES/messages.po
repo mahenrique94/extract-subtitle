@@ -395,4 +395,19 @@ msgid "Failed to save changes"
 msgstr "Falha ao salvar alterações"
 
 msgid "Refresh"
-msgstr "Atualizar" 
+msgstr "Atualizar"
+
+msgid "Items per page"
+msgstr "Itens por página"
+
+msgid "First page"
+msgstr "Primeira página"
+
+msgid "Previous page"
+msgstr "Página anterior"
+
+msgid "Next page"
+msgstr "Próxima página"
+
+msgid "Last page"
+msgstr "Última página" 

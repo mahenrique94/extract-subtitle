@@ -269,6 +269,56 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+                    <div class="flex flex-col items-start">
+                        {{ custom_dropdown(
+                            id='per-page',
+                            options=[
+                                {'value': '5', 'label': '5'},
+                                {'value': '10', 'label': '10'},
+                                {'value': '25', 'label': '25'},
+                                {'value': '50', 'label': '50'}
+                            ],
+                            selected_value=per_page|string,
+                            placeholder=_('Items per page'),
+                            icon_class=''
+                        ) }}
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <!-- First Page -->
+                        <button onclick="goToPage(1)" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
+                            <span class="sr-only">{{ _('First page') }}</span>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <!-- Previous Page -->
+                        <button onclick="goToPage({{ page - 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
+                            <span class="sr-only">{{ _('Previous page') }}</span>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+
+                        <!-- Page Numbers -->
+                        {% set start_page = [1, page - 2] | max %}
+                        {% set end_page = [total_pages + 1, page + 3] | min %}
+                        {% for p in range(start_page, end_page) %}
+                            <button onclick="goToPage({{ p }})" class="relative inline-flex items-center h-8 px-3 rounded-md border border-gray-300 bg-white text-sm font-medium {% if p == page %}text-indigo-600 bg-indigo-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                                {{ p }}
+                            </button>
+                        {% endfor %}
+
+                        <!-- Next Page -->
+                        <button onclick="goToPage({{ page + 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
+                            <span class="sr-only">{{ _('Next page') }}</span>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <!-- Last Page -->
+                        <button onclick="goToPage({{ total_pages }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
+                            <span class="sr-only">{{ _('Last page') }}</span>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         {% else %}
             <div class="text-center py-12">
@@ -766,6 +816,29 @@ function saveSrtContent() {
         saveButton.classList.remove('opacity-75', 'cursor-not-allowed');
         saveButton.innerHTML = originalButtonText;
     });
+}
+
+function updatePagination(perPage) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1'); // Reset to first page when changing items per page
+    window.location.href = url.toString();
+}
+
+// Add event listener for the custom dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const perPageInput = document.getElementById('per-page-input');
+    if (perPageInput) {
+        perPageInput.addEventListener('change', function() {
+            updatePagination(this.value);
+        });
+    }
+});
+
+function goToPage(page) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
 }
 </script>
 {% endblock %} 

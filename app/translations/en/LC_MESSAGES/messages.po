@@ -228,4 +228,19 @@ msgid "Failed to save changes"
 msgstr "Failed to save changes"
 
 msgid "Refresh"
-msgstr "Refresh" 
+msgstr "Refresh"
+
+msgid "Items per page"
+msgstr "Items per page"
+
+msgid "First page"
+msgstr "First page"
+
+msgid "Previous page"
+msgstr "Previous page"
+
+msgid "Next page"
+msgstr "Next page"
+
+msgid "Last page"
+msgstr "Last page" 
