@@ -254,7 +254,8 @@
                                 {% if extraction.status == 'completed' %}
                                     <button type="button" 
                                             class="text-indigo-600 hover:text-indigo-900 flex items-center"
-                                            onclick="openPreviewModal('{{ extraction.srt_filename }}')">
+                                            onclick="openPreviewModal('{{ extraction.srt_filename }}', '{{ extraction.target_language }}')"
+                                            data-language="{{ extraction.target_language }}">
                                         <i class="fas fa-eye mr-1"></i>
                                         {{ _('Preview') }}
                                     </button>
@@ -269,55 +270,55 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
 
-                <!-- Pagination Controls -->
-                <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
-                    <div class="flex flex-col items-start">
-                        {{ custom_dropdown(
-                            id='per-page',
-                            options=[
-                                {'value': '5', 'label': '5'},
-                                {'value': '10', 'label': '10'},
-                                {'value': '25', 'label': '25'},
-                                {'value': '50', 'label': '50'}
-                            ],
-                            selected_value=per_page|string,
-                            placeholder=_('Items per page'),
-                            icon_class=''
-                        ) }}
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <!-- First Page -->
-                        <button onclick="goToPage(1)" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
-                            <span class="sr-only">{{ _('First page') }}</span>
-                            <i class="fas fa-angle-double-left"></i>
-                        </button>
-                        <!-- Previous Page -->
-                        <button onclick="goToPage({{ page - 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
-                            <span class="sr-only">{{ _('Previous page') }}</span>
-                            <i class="fas fa-angle-left"></i>
-                        </button>
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+                <div class="flex flex-col items-start">
+                    {{ custom_dropdown(
+                        id='per-page',
+                        options=[
+                            {'value': '5', 'label': '5'},
+                            {'value': '10', 'label': '10'},
+                            {'value': '25', 'label': '25'},
+                            {'value': '50', 'label': '50'}
+                        ],
+                        selected_value=per_page|string,
+                        placeholder=_('Items per page'),
+                        icon_class=''
+                    ) }}
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- First Page -->
+                    <button onclick="goToPage(1)" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
+                        <span class="sr-only">{{ _('First page') }}</span>
+                        <i class="fas fa-angle-double-left"></i>
+                    </button>
+                    <!-- Previous Page -->
+                    <button onclick="goToPage({{ page - 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}opacity-50 cursor-not-allowed{% endif %}" {% if page == 1 %}disabled{% endif %}>
+                        <span class="sr-only">{{ _('Previous page') }}</span>
+                        <i class="fas fa-angle-left"></i>
+                    </button>
 
-                        <!-- Page Numbers -->
-                        {% set start_page = [1, page - 2] | max %}
-                        {% set end_page = [total_pages + 1, page + 3] | min %}
-                        {% for p in range(start_page, end_page) %}
-                            <button onclick="goToPage({{ p }})" class="relative inline-flex items-center h-8 px-3 rounded-md border border-gray-300 bg-white text-sm font-medium {% if p == page %}text-indigo-600 bg-indigo-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
-                                {{ p }}
-                            </button>
-                        {% endfor %}
+                    <!-- Page Numbers -->
+                    {% set start_page = [1, page - 2] | max %}
+                    {% set end_page = [total_pages + 1, page + 3] | min %}
+                    {% for p in range(start_page, end_page) %}
+                        <button onclick="goToPage({{ p }})" class="relative inline-flex items-center h-8 px-3 rounded-md border border-gray-300 bg-white text-sm font-medium {% if p == page %}text-indigo-600 bg-indigo-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                            {{ p }}
+                        </button>
+                    {% endfor %}
 
-                        <!-- Next Page -->
-                        <button onclick="goToPage({{ page + 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
-                            <span class="sr-only">{{ _('Next page') }}</span>
-                            <i class="fas fa-angle-right"></i>
-                        </button>
-                        <!-- Last Page -->
-                        <button onclick="goToPage({{ total_pages }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
-                            <span class="sr-only">{{ _('Last page') }}</span>
-                            <i class="fas fa-angle-double-right"></i>
-                        </button>
-                    </div>
+                    <!-- Next Page -->
+                    <button onclick="goToPage({{ page + 1 }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
+                        <span class="sr-only">{{ _('Next page') }}</span>
+                        <i class="fas fa-angle-right"></i>
+                    </button>
+                    <!-- Last Page -->
+                    <button onclick="goToPage({{ total_pages }})" class="relative inline-flex items-center h-8 px-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}opacity-50 cursor-not-allowed{% endif %}" {% if page == total_pages %}disabled{% endif %}>
+                        <span class="sr-only">{{ _('Last page') }}</span>
+                        <i class="fas fa-angle-double-right"></i>
+                    </button>
                 </div>
             </div>
         {% else %}
@@ -331,6 +332,7 @@
 
 <!-- SRT Preview Modal -->
 <div id="previewModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <input type="hidden" id="modal-language" value="">
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6">
@@ -344,15 +346,30 @@
                     <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                         <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="previewModalLabel">{{ _('SRT Preview') }}</h3>
                         <div class="mt-2">
-                            <div class="flex justify-end space-x-2 mb-4">
-                                <button type="button" id="saveButton" onclick="saveSrtContent()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
-                                    <i class="fas fa-save mr-2"></i>
-                                    {{ _('Save Changes') }}
-                                </button>
-                                <button type="button" onclick="downloadSrt()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                                    <i class="fas fa-download mr-2"></i>
-                                    {{ _('Download') }}
-                                </button>
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="w-48">
+                                    {{ custom_dropdown(
+                                        id='preview-language',
+                                        options=[
+                                            {'value': 'en', 'label': _('English'), 'flag': '🇺🇸'},
+                                            {'value': 'pt', 'label': _('Português (Brasil)'), 'flag': '🇧🇷'},
+                                            {'value': 'es', 'label': _('Español'), 'flag': '🇪🇸'}
+                                        ],
+                                        selected_value='',
+                                        placeholder=_('Select language'),
+                                        icon_class=''
+                                    ) }}
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button type="button" id="saveButton" onclick="saveSrtContent()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
+                                        <i class="fas fa-save mr-2"></i>
+                                        {{ _('Save Changes') }}
+                                    </button>
+                                    <button type="button" onclick="downloadSrt()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                        <i class="fas fa-download mr-2"></i>
+                                        {{ _('Download') }}
+                                    </button>
+                                </div>
                             </div>
                             <div class="relative">
                                 <textarea id="srtContent" rows="15" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"></textarea>
@@ -653,10 +670,11 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-function previewSrt(filename) {
+function previewSrt(filename, language) {
     if (!filename) return;
     
     currentFilename = filename;
+    originalLanguage = language;
     showLoading();
     
     fetch(`/preview/${filename}`)
@@ -665,6 +683,18 @@ function previewSrt(filename) {
             hideLoading();
             if (data.status === 'success') {
                 document.getElementById('srtContent').value = data.content;
+                // Set the language dropdown to the detected language
+                const languageInput = document.getElementById('preview-language-input');
+                if (languageInput && originalLanguage) {
+                    languageInput.value = originalLanguage;
+                    // Find and click the option with the matching value
+                    const options = document.querySelectorAll('#preview-language .dropdown-option');
+                    options.forEach(option => {
+                        if (option.getAttribute('data-value') === originalLanguage) {
+                            option.click();
+                        }
+                    });
+                }
             } else {
                 showToast(data.error || '{{ _("Error loading SRT file") }}', 'error');
             }
@@ -699,11 +729,39 @@ function downloadSrt() {
     URL.revokeObjectURL(link.href);
 }
 
-function openPreviewModal(filename) {
+function openPreviewModal(filename, language) {
     currentFilename = filename;
+    originalLanguage = language;
     const modal = document.getElementById('previewModal');
     modal.classList.remove('hidden');
-    previewSrt(filename);
+    
+    // Set the language dropdown to the detected language
+    const container = document.getElementById('preview-language-container');
+    const selectedText = document.getElementById('preview-language-selected-text');
+    const input = document.getElementById('preview-language-input');
+    const options = container.querySelectorAll('div[data-value]');
+    
+    if (language) {
+        // Find the matching option
+        const selectedOption = Array.from(options).find(opt => opt.dataset.value === language);
+        if (selectedOption) {
+            // Update selected text
+            selectedText.textContent = selectedOption.dataset.label;
+            
+            // Update hidden input
+            input.value = language;
+            
+            // Update checkmarks and background
+            options.forEach(opt => {
+                opt.querySelector('.checkmark').classList.add('hidden');
+                opt.classList.remove('bg-indigo-50');
+            });
+            selectedOption.querySelector('.checkmark').classList.remove('hidden');
+            selectedOption.classList.add('bg-indigo-50');
+        }
+    }
+    
+    previewSrt(filename, language);
 }
 
 function closePreviewModal() {
