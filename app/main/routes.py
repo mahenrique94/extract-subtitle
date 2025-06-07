@@ -69,30 +69,33 @@ def dashboard():
             # Initialize subtitle extractor
             extractor = SubtitleExtractor(current_app.config['UPLOAD_FOLDER'])
             
-            # Get video duration and check credits
-            video_path = os.path.join(current_app.config['UPLOAD_FOLDER'], secure_filename(form.file.data.filename))
-            duration_seconds = extractor.get_video_duration(video_path)  # Already in seconds
+            # Save the file first
+            filename = secure_filename(form.file.data.filename)
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            form.file.data.save(file_path)
+            
+            # Get media duration and check credits
+            duration_seconds = extractor.get_media_duration(file_path)  # Already in seconds
             
             # Calculate required credits (1 credit per minute)
-            required_credits = (duration_seconds / 60) + 1  # Round up to nearest minute
+            required_credits = max(1, int((duration_seconds / 60) + 0.5))  # Round to nearest minute, minimum 1 credit
             
             # Get user's credit balance
             credit_balance = current_user.credit_balance or 0.0
             
-            logger.info(f"Video duration: {duration_seconds} seconds, Required credits: {required_credits}, User balance: {credit_balance}")
+            logger.info(f"Media duration: {duration_seconds} seconds, Required credits: {required_credits}, User balance: {credit_balance}")
             
             if credit_balance < required_credits:
-                error_message = _('Insufficient credits! You have {} credits, but need {} credits for this video. Please add more credits to continue.').format(
+                # Clean up the saved file since we're not processing it
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    
+                error_message = _('Insufficient credits! You have {} credits, but need {} credits for this media file. Please add more credits to continue.').format(
                     credit_balance,
                     required_credits
                 )
                 flash(error_message, 'error')
                 return jsonify({'error': error_message})
-            
-            # Process the file
-            filename = secure_filename(form.file.data.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            form.file.data.save(file_path)
             
             # Deduct credits from user's balance
             current_user.credit_balance = credit_balance - required_credits
@@ -131,7 +134,7 @@ def dashboard():
             
         except Exception as e:
             logger.error(f"Error processing upload: {str(e)}")
-            error_message = _('Error processing video file. Please try again.')
+            error_message = _('Error processing media file. Please try again.')
             flash(error_message, 'error')
             return jsonify({'error': error_message})
     

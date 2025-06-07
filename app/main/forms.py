@@ -8,6 +8,6 @@ from app.config.languages import SUPPORTED_LANGUAGES
 class UploadForm(FlaskForm):
     file = FileField('File', validators=[
         FileRequired(),
-        FileAllowed(['mp4', 'avi', 'mkv', 'mov'], 'Only video files are allowed!')
+        FileAllowed(['mp4', 'avi', 'mkv', 'mov', 'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'], 'Only audio and video files are allowed!')
     ])
     submit = SubmitField('Upload') 

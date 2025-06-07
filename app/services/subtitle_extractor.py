@@ -150,30 +150,40 @@ class SubtitleExtractor:
             extraction.error_message = str(e)
             db.session.commit()
 
-    def get_video_duration(self, video_path):
-        """Get the duration of a video file in seconds."""
+    def get_media_duration(self, media_path):
+        """Get the duration of an audio or video file in seconds."""
         try:
             import subprocess
             import json
             
-            # Use ffprobe to get video duration
+            # Use ffprobe to get media duration (works for both audio and video)
             cmd = [
                 'ffprobe',
                 '-v', 'quiet',
                 '-print_format', 'json',
                 '-show_format',
-                video_path
+                media_path
             ]
             
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 data = json.loads(result.stdout)
                 duration = float(data['format']['duration'])
+                logger.info(f"Media duration for {media_path}: {duration} seconds")
                 return duration
             else:
-                logger.error(f"Error getting video duration: {result.stderr}")
-                return 60  # Default to 1 minute if we can't get the duration
+                logger.error(f"Error getting media duration: {result.stderr}")
+                # Try alternative method with Whisper's audio loading
+                try:
+                    import whisper
+                    audio = whisper.load_audio(media_path)
+                    duration = len(audio) / whisper.audio.SAMPLE_RATE  # Convert samples to seconds
+                    logger.info(f"Fallback: Media duration for {media_path}: {duration} seconds")
+                    return duration
+                except Exception as whisper_e:
+                    logger.error(f"Whisper fallback failed: {str(whisper_e)}")
+                    return 60  # Default to 1 minute if we can't get the duration
                 
         except Exception as e:
-            logger.error(f"Error getting video duration: {str(e)}")
+            logger.error(f"Error getting media duration: {str(e)}")
             return 60  # Default to 1 minute if we can't get the duration 
